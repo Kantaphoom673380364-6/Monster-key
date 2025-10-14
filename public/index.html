@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <title>Monster Key - Main Menu</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+Thai:wght@400&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #1a1a2e;
+            color: #e0e0e0;
+            font-family: 'Noto Sans Thai', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            text-align: center;
+            overflow: hidden;
+            background-image: url('assets/images/background.jpg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        #main-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+        }
+        #game-container {
+            width: 800px;
+            height: 600px;
+            background: rgba(23, 23, 39, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 0 25px rgba(164, 134, 242, 0.5);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+        
+        #top-ui-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        #volume-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background-color: rgba(26, 26, 46, 0.7);
+            padding: 10px 15px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #title-screen-content {
+            width: 100%;
+        }
+
+        #title-text {
+            font-family: 'Cinzel', serif;
+            font-size: 4.5em;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #ffae42, #ffca7b, #fca311, #ffffff, #ffae42);
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: animated-gradient 4s linear infinite;
+        }
+        #game-logo {
+            max-height: 250px;
+            margin-top: 15px;
+            animation: float-glow 4s ease-in-out infinite;
+        }
+        @keyframes animated-gradient { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        @keyframes float-glow { 0% { transform: translateY(0); filter: drop-shadow(0 0 10px #fca311); } 50% { transform: translateY(-15px); filter: drop-shadow(0 0 20px #ffca7b); } 100% { transform: translateY(0); filter: drop-shadow(0 0 10px #fca311); } }
+
+        #start-screen {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .menu-button {
+            padding: 20px 30px;
+            font-size: 1.8em;
+            font-family: 'Cinzel', serif;
+            color: #1a1a2e;
+            background-color: #fca311;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 0 15px #fca311;
+            white-space: nowrap;
+            text-decoration: none;
+        }
+        .menu-button:hover {
+            transform: scale(1.05);
+        }
+
+        #language-selection {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        /* ตำแหน่งของปุ่มเปลี่ยนภาษาสำหรับหน้าต่อสู้ */
+        #language-selection.battle-lang-pos {
+            position: absolute; /* เปลี่ยนเป็น absolute เพื่ออ้างอิง body */
+            top: -150px;
+            right: -500px;
+            left: auto; /* ล้างค่า left */
+            z-index: 1000; /* ให้แน่ใจว่าอยู่ด้านบนสุด */
+        }
+
+        #language-selection button {
+            background-color: rgb(0, 0, 0);
+            border: 1px solid #fa9a00;
+            color: #fca311;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #language-selection button:hover {
+            background-color: rgba(252, 163, 17, 0.2);
+        }
+
+        .correct { color: #00ff7f; }
+        .incorrect { color: #ff4141; }
+        .hidden { display: none !important; }
+
+    
+
+        #leaderboard-container {
+    width: 420px; /* ✅ ขยายความกว้าง */
+    background: rgba(23, 23, 39, 0.85);
+    border: 2px solid #fca311;
+    padding: 30px; /* ✅ เพิ่มพื้นที่ภายใน */
+    border-radius: 18px;
+    height: 650px; /* ✅ เพิ่มความสูง */
+    box-shadow: 0 0 25px rgba(252, 163, 17, 0.3);
+    transition: all 0.3s ease-in-out;
+}
+
+        #leaderboard-container h2 {
+             font-family: 'Cinzel', serif;
+             color: #ffca7b;
+             text-shadow: 0 0 10px #fca311;
+        }
+        #leaderboard-list {
+            list-style: none;
+            padding: 0;
+            color: #e0e0e0;
+        }
+        #leaderboard-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 5px;
+            border-bottom: 1px solid rgba(252, 163, 17, 0.3);
+            font-size: 1.1em;
+        }
+
+#leaderboards-wrapper {
+  display: flex;
+  gap: 25px;
+  justify-content: center;
+  align-items: flex-start;
+  margin-top: 30px;
+}
+
+.leaderboard-box {
+  width: 420px;
+  background: rgba(23, 23, 39, 0.85);
+  border: 2px solid #fca311;
+  padding: 30px;
+  border-radius: 18px;
+  height: 650px;
+  box-shadow: 0 0 25px rgba(252, 163, 17, 0.3);
+  transition: all 0.3s ease-in-out;
+}
+
+.leaderboard-box h2 {
+  font-family: 'Cinzel', serif;
+  color: #ffca7b;
+  text-shadow: 0 0 10px #fca311;
+}
+
+.leaderboard-box ul {
+  list-style: none;
+  padding: 0;
+  color: #e0e0e0;
+}
+
+.leaderboard-box li {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 5px;
+  border-bottom: 1px solid rgba(252, 163, 17, 0.3);
+  font-size: 1.1em;
+}
+
+.leaderboard-box li:last-child { border-bottom: none; }
+
+        #leaderboard-list li:last-child {
+            border-bottom: none;
+        }
+        .easy-mode {
+            color: #55e076;
+             font-weight: bold;
+                }
+.hard-mode {
+  color: #ff4141;
+  font-weight: bold;
+}
+
+.glow-crown {
+  animation: glowPulse 1.5s infinite alternate;
+  text-shadow: 0 0 8px #ffd700, 0 0 16px #ffcc00, 0 0 24px #ffaa00;
+}
+@keyframes glowPulse {
+  from { text-shadow: 0 0 6px #ffd700, 0 0 12px #ffcc00; }
+  to   { text-shadow: 0 0 14px #ffae00, 0 0 24px #ff6600; }
+}
+
+        
+    </style>
+</head>
+<body>
+    <div id="top-ui-controls">
+        <div id="volume-controls">
+            <button id="volume-button"><i class="fas fa-volume-up"></i></button>
+            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3">
+        </div>
+    </div>
+     <div id="leaderboards-wrapper">
+    <div class="leaderboard-box">
+      <h2 id="leaderboard-coop-title">🏆 Leaderboard – Co-op 🏆</h2>
+      <ul id="leaderboard-coop"></ul>
+    </div>
+  </div>
+
+    <div id="main-container">
+        <div id="game-container">
+            <div id="language-selection">
+                <button id="lang-th-button">ไทย</button>
+                <button id="lang-en-button">English</button>
+            </div>
+            <div id="title-screen-content">
+                <h1 id="title-text">Monster Key</h1>
+                <img id="game-logo" src="assets/images/monster-logo.png" alt="Game Logo">
+            </div>
+            <div id="start-screen">
+                <a href="/solo.html" id="start-button" class="menu-button">เริ่มเกม (SOLO)</a>
+                <a href="/coop.html" id="pvp-button" class="menu-button">โหมด CO-OP ออนไลน์ ⚔️</a>
+            </div>
+            
+  </div>
+        </div>
+        <div id="leaderboard-container">
+             <h2 id="leaderboard-title">🏆 Leaderboard 🏆</h2>
+            <ul id="leaderboard-list">
+                <li>กำลังโหลด...</li>
+            </ul>
+        </div>
+    </div>
+
+    <audio id="background-music" src="assets/bg_music.mp3" loop preload="auto"></audio>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyBUBIEQLU2OHw_1ataX1di6V86s0qPsr_E",
+          authDomain: "typomancer-game.firebaseapp.com",
+          projectId: "typomancer-game",
+          storageBucket: "typomancer-game.appspot.com",
+          messagingSenderId: "988104502180",
+          appId: "1:988104502180:web:62dd3b80869a131b39ef31"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        const translations = {
+            en: {
+                startSolo: "Start Game (SOLO)",
+                pvpMode: "CO-OP Mode (Online) ⚔️",        
+                leaderboardTitle: "🏆 Leaderboard 🏆",
+                coopLeaderboardTitle: "🏆 CO-OP  TOP TIER 🏆",
+                loading: "Loading...",
+                noData: "No data yet",
+                error: "Error",
+                leaderboardTitle: "🏆 SOLO TOP TIER 🏆",
+            },
+            th: {
+                startSolo: "เริ่มเกม (SOLO)",
+                pvpMode: "โหมด CO-OP ออนไลน์ ⚔️",                
+                loading: "กำลังโหลด...",
+                noData: "ยังไม่มีข้อมูล",
+                error: "เกิดข้อผิดพลาด",
+                leaderboardTitle: "🏆 ตารางอันดับ โซโล่ 🏆",
+                coopLeaderboardTitle: "🏆 ตารางอันดับ ออนไลน์ 🏆"
+            }
+        };
+
+        let currentLang = 'th';
+
+        const startButton = document.getElementById('start-button');
+        const pvpButton = document.getElementById('pvp-button');
+        const leaderboardTitle = document.getElementById('leaderboard-title');
+        const leaderboardList = document.getElementById('leaderboard-list');
+        const langThButton = document.getElementById('lang-th-button');
+        const langEnButton = document.getElementById('lang-en-button');
+        const backgroundMusic = document.getElementById('background-music');
+        const volumeButton = document.getElementById('volume-button');
+        const volumeSlider = document.getElementById('volume-slider');
+
+        function setLanguage(lang) {
+  currentLang = lang;
+  localStorage.setItem("gameLanguage", lang);
+  const t = translations[lang];
+  startButton.textContent = t.startSolo;
+  pvpButton.innerHTML = t.pvpMode;
+  leaderboardTitle.innerHTML = t.leaderboardTitle;
+
+  const coopLeaderboardTitle = document.getElementById("leaderboard-coop-title");
+  if (coopLeaderboardTitle) coopLeaderboardTitle.innerHTML = t.coopLeaderboardTitle;
+
+  displayLeaderboard();
+  displayCoopLeaderboard();
+}
+
+
+async function displayLeaderboard() {
+  const t = translations[currentLang];
+  leaderboardList.innerHTML = `<li>${t.loading}</li>`;
+
+  try {
+    const snapshot = await db.collection("leaderboard").get();
+    leaderboardList.innerHTML = '';
+
+    if (snapshot.empty) {
+      leaderboardList.innerHTML = `<li>${t.noData}</li>`;
+      return;
+    }
+
+    // ดึงข้อมูลทั้งหมดออกมา
+    const dataArr = [];
+    snapshot.forEach((doc) => dataArr.push(doc.data()));
+
+    // ✅ เรียงลำดับ: บอส > โหมด > เวลา
+    dataArr.sort((a, b) => {
+      const bossesA = a.bossesDefeated || 0;
+      const bossesB = b.bossesDefeated || 0;
+
+      if (bossesB !== bossesA) return bossesB - bossesA; // บอสมาก่อน
+      if (a.mode === 'ยาก' && b.mode !== 'ยาก') return -1; // โหมดยากมาก่อน
+      if (a.mode !== 'ยาก' && b.mode === 'ยาก') return 1;  // โหมดง่ายทีหลัง
+      return (a.time || 9999) - (b.time || 9999); // เวลาน้อยก่อน
+    });
+
+    let rank = 1;
+dataArr.slice(0, 10).forEach((data) => {
+  const timeFormatted = data.time
+    ? `${data.time.toFixed(2)} ${currentLang === 'th' ? 'วินาที' : 'sec'}`
+    : "-";
+
+  const modeText =
+    currentLang === 'th'
+      ? data.mode === 'ยาก'
+        ? '(โหมดยาก)'
+        : '(โหมดง่าย)'
+      : data.mode === 'ยาก'
+        ? '(Hard Mode)'
+        : '(Easy Mode)';
+
+    // ==========================
+// ✅ โหลดตาราง Solo / Co-op จาก Firestore
+// ==========================
+async function displayLeaderboard() {
+  const t = translations[currentLang];
+  const targetEl = document.getElementById("leaderboard-list");
+  targetEl.innerHTML = `<li>${t.loading}</li>`;
+
+  try {
+    const snap = await db.collection("leaderboard").get();
+    if (snap.empty) {
+      targetEl.innerHTML = `<li>${t.noData}</li>`;
+      return;
+    }
+
+    const dataArr = [];
+    snap.forEach((doc) => dataArr.push(doc.data()));
+
+    dataArr.sort((a, b) => {
+      const bossesA = a.bossesDefeated || 0;
+      const bossesB = b.bossesDefeated || 0;
+      if (bossesB !== bossesA) return bossesB - bossesA;
+      if (a.mode === "ยาก" && b.mode !== "ยาก") return -1;
+      if (a.mode !== "ยาก" && b.mode === "ยาก") return 1;
+      return (a.time || 9999) - (b.time || 9999);
+    });
+
+    targetEl.innerHTML = "";
+    let rank = 1;
+
+    dataArr.slice(0, 10).forEach((data) => {
+      const time = data.time
+        ? `${data.time.toFixed(2)} ${currentLang === "th" ? "วินาที" : "sec"}`
+        : "-";
+      const modeText =
+        currentLang === "th"
+          ? data.mode === "ยาก"
+            ? "(โหมดยาก)"
+            : "(โหมดง่าย)"
+          : data.mode === "ยาก"
+          ? "(Hard Mode)"
+          : "(Easy Mode)";
+      const bossText =
+        currentLang === "th"
+          ? `บอส ${data.bossesDefeated || 0}/2`
+          : `Boss ${data.bossesDefeated || 0}/2`;
+
+      let crown = "";
+      if (rank === 1) crown = '<span class="glow-crown">👑</span>';
+      else if (rank === 2) crown = '<span style="color:#e5c100;">👑</span>';
+      else if (rank === 3) crown = '<span style="color:#c9a500;">👑</span>';
+
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <span>
+          #${rank} ${crown} ${data.name}
+          <span style="color:${data.mode === "ยาก" ? "#ff4d4d" : "#55e076"}">
+            ${modeText}
+          </span> — ${bossText}
+        </span>
+        <span>${time}</span>`;
+      targetEl.appendChild(li);
+      rank++;
+    });
+  } catch (err) {
+    console.error("Solo Error:", err);
+    targetEl.innerHTML = `<li>${t.error}</li>`;
+  }
+}
+async function displayCoopLeaderboard() {
+  const t = translations[currentLang];
+  const targetEl = document.getElementById("leaderboard-coop");
+  targetEl.innerHTML = `<li>${t.loading}</li>`;
+
+  try {
+    const snap = await db.collection("leaderboard_coop").get();
+    if (snap.empty) {
+      targetEl.innerHTML = `<li>${t.noData}</li>`;
+      return;
+    }
+
+    const dataArr = [];
+    snap.forEach((doc) => dataArr.push(doc.data()));
+
+    dataArr.sort((a, b) => {
+      const bossesA = a.bossesDefeated || 0;
+      const bossesB = b.bossesDefeated || 0;
+      if (bossesB !== bossesA) return bossesB - bossesA;
+      if (a.mode === "ยาก" && b.mode !== "ยาก") return -1;
+      if (a.mode !== "ยาก" && b.mode === "ยาก") return 1;
+      return (a.time || 9999) - (b.time || 9999);
+    });
+
+    targetEl.innerHTML = "";
+    let rank = 1;
+
+    dataArr.slice(0, 10).forEach((data) => {
+      const time = data.time
+        ? `${data.time.toFixed(2)} ${currentLang === "th" ? "วินาที" : "sec"}`
+        : "-";
+      const modeText =
+        currentLang === "th"
+          ? data.mode === "ยาก"
+            ? "(โหมดยาก)"
+            : "(โหมดง่าย)"
+          : data.mode === "ยาก"
+          ? "(Hard Mode)"
+          : "(Easy Mode)";
+      const bossText =
+        currentLang === "th"
+          ? `บอส ${data.bossesDefeated || 0}/2`
+          : `Boss ${data.bossesDefeated || 0}/2`;
+
+      let crown = "";
+      if (rank === 1) crown = '<span class="glow-crown">👑</span>';
+      else if (rank === 2) crown = '<span style="color:#e5c100;">👑</span>';
+      else if (rank === 3) crown = '<span style="color:#c9a500;">👑</span>';
+
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <span>
+          #${rank} ${crown} ${data.name}
+          <span style="color:${data.mode === "ยาก" ? "#ff4d4d" : "#55e076"}">
+            ${modeText}
+          </span> — ${bossText}
+        </span>
+        <span>${time}</span>`;
+      targetEl.appendChild(li);
+      rank++;
+    });
+  } catch (err) {
+    console.error("Co-op Error:", err);
+    targetEl.innerHTML = `<li>${t.error}</li>`;
+  }
+}
+
+window.addEventListener("DOMContentLoaded", () => {
+  const savedLang = localStorage.getItem("gameLanguage") || "th";
+  setLanguage(savedLang);
+  displayLeaderboard();       // ← Solo (ชื่อเดิมได้เลย)
+  displayCoopLeaderboard();   // ← Co-op (ใหม่)
+});
+
+  const bossText =
+    currentLang === 'th'
+      ? `บอส ${data.bossesDefeated || 0}/2`
+      : `Boss ${data.bossesDefeated || 0}/2`;
+
+  // 👑 มงกุฎเฉพาะ Top 3
+  let crown = '';
+  if (rank === 1) crown = '<span class="glow-crown">👑</span>';
+  else if (rank === 2) crown = '<span style="color:#e5c100;">👑</span>';
+  else if (rank === 3) crown = '<span style="color:#c9a500;">👑</span>';
+
+  const li = document.createElement('li');
+  li.innerHTML = `
+    <span>
+      #${rank} ${crown} ${data.name}
+      <span style="color:${data.mode === 'ยาก' ? '#ff4d4d' : '#55e076'}">
+        ${modeText}
+      </span>
+      — ${bossText}
+    </span>
+    <span>${timeFormatted}</span>
+  `;
+
+  leaderboardList.appendChild(li);
+  rank++;
+});
+
+  } catch (error) {
+    console.error("⚠️ เกิดข้อผิดพลาดในการโหลดตารางเวลา:", error);
+  }
+}
+
+
+
+        langThButton.addEventListener('click', () => setLanguage('th'));
+        langEnButton.addEventListener('click', () => setLanguage('en'));
+
+        volumeButton.addEventListener('click', () => {
+            backgroundMusic.muted = !backgroundMusic.muted;
+            volumeButton.innerHTML = backgroundMusic.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        });
+
+        volumeSlider.addEventListener('input', (e) => {
+            backgroundMusic.volume = e.target.value;
+            backgroundMusic.muted = e.target.value == 0;
+            volumeButton.innerHTML = backgroundMusic.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        });
+
+        document.body.addEventListener('click', () => {
+            if (backgroundMusic.paused) {
+                backgroundMusic.volume = volumeSlider.value;
+                backgroundMusic.play();
+            }
+        }, { once: true });
+        
+        const savedLang = localStorage.getItem('gameLanguage');
+        setLanguage(savedLang || 'th');
+        
+    </script>
+</body>
+</html>

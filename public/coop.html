@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>Monster Key – CO-OP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet"/>
+  <style>
+    :root{
+      --gold:#fca311; --gold-soft:#ffca7b; --bg:#171727; --panel:rgba(23,23,39,.85); --text:#e9e9f0; --danger:#ff4d4d; --good:#55e076;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; color:var(--text); font-family:'Noto Sans Thai', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:#1a1a2e url('assets/images/background.jpg') center/cover no-repeat fixed;
+      display:flex; align-items:center; justify-content:center; overflow:hidden;
+    }
+    .shell{width:min(1200px,96vw); display:grid; grid-template-columns:1fr; gap:22px;}
+    h1,h2,h3{font-family:'Cinzel', serif; letter-spacing:.5px}
+    .card{
+      background:var(--panel); border:2px solid var(--gold); border-radius:18px; box-shadow:0 0 25px rgba(252,163,17,.30);
+      padding:22px;
+    }
+    .title{
+      margin:0 0 10px; font-size:42px; text-align:center; color:var(--gold-soft);
+      text-shadow:0 0 10px var(--gold);
+    }
+    .row{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+    label{min-width:110px}
+    input[type="text"], select{
+      height:44px; padding:0 12px; border:1px solid #444; background:#0f0f1b; color:var(--text); border-radius:10px; outline:none;
+    }
+    input[type="text"]::placeholder{color:#9aa}
+    .btn{
+      cursor:pointer; border:none; background:var(--gold); color:#1a1a2e; font-weight:700; height:48px; padding:0 18px; border-radius:12px;
+      box-shadow:0 0 14px var(--gold); transition:transform .12s ease, box-shadow .2s;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn[disabled]{opacity:.55; cursor:not-allowed; transform:none; box-shadow:none}
+    .muted{opacity:.75}
+    .status{min-height:26px}
+    .split{display:grid; grid-template-columns:1fr 1fr; gap:18px}
+    .hidden{display:none !important}
+
+    /* GAME */
+    .hud{
+      display:grid; grid-template-columns:1fr; gap:18px; place-items:center; text-align:center;
+    }
+    .bossName{font-size:36px; text-shadow:0 0 6px #000}
+    .hpbar{width:100%; height:18px; background:#2b2b3f; border-radius:10px; overflow:hidden; border:1px solid #0009}
+    .hp{height:100%; background:linear-gradient(90deg,#ff5656,#ff1e1e); width:100%; transition:width .18s ease}
+    .players{
+      width:100%; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; gap:10px;
+    }
+    .pbox{min-width:240px; border:1px dashed #444; border-radius:12px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px}
+    .chip{padding:4px 10px; border-radius:999px; font-weight:700}
+    .chip.blue{background:#2b4fff33; color:#9db3ff}
+    .chip.red{background:#ff2b2b33; color:#ff9d9d}
+    .badge{padding:2px 8px; border-radius:999px; border:1px solid #444}
+    .ready{font-size:28px; letter-spacing:1px; margin-top:6px}
+    .wordBox{
+      width:100%; display:flex; gap:10px; align-items:center
+    }
+    .wordTarget{
+      flex:1; height:52px; display:flex; align-items:center; padding:0 14px; border-radius:12px; background:#0f0f1b; border:1px solid #303048;
+      font-size:20px; letter-spacing:.6px
+    }
+    .fire{min-width:110px}
+    .ok{color:var(--good)} .bad{color:var(--danger)}
+    .buffs{display:flex; gap:10px}
+    .buff{border:1px solid #444; padding:2px 8px; border-radius:8px; font-size:13px}
+    .timer{font-family:'Cinzel',serif; letter-spacing:1px}
+
+    /* Countdown overlay */
+    .overlay{
+      position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:50
+    }
+    .count{font-family:'Cinzel',serif; font-size:120px; color:#fff; text-shadow:0 0 20px #000, 0 0 30px var(--gold);}
+
+    /* mobile */
+    @media (max-width:900px){
+      .split{grid-template-columns:1fr}
+      .players{flex-direction:column; gap:8px}
+      .pbox{width:100%}
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+
+    <!-- LOBBY -->
+    <section id="lobby" class="card">
+      <h1 class="title">CO-OP MODE</h1>
+      <div class="row">
+        <label for="pname">ชื่อผู้เล่น</label>
+        <input id="pname" type="text" placeholder="พิมพ์ชื่อของคุณ..." maxlength="18"/>
+        <label for="diff">ความยาก</label>
+        <select id="diff">
+          <option value="ง่าย">ง่าย</option>
+          <option value="ยาก">ยาก</option>
+        </select>
+        <button id="findBtn" class="btn">ค้นหาผู้เล่น</button>
+      </div>
+      <div id="lobbyStatus" class="status muted">กรอกชื่อและเลือกความยากให้ตรงกับอีกฝ่าย จากนั้นกด “ค้นหาผู้เล่น”</div>
+      <div class="split">
+        <div class="card">
+          <h3 style="margin-top:0">ผู้เล่นของคุณ</h3>
+          <div id="youBox" class="pbox">
+            <span class="chip blue">Player 1</span>
+            <span id="youName" class="badge">-</span>
+            <span id="youDiff" class="badge">-</span>
+          </div>
+        </div>
+        <div class="card">
+          <h3 style="margin-top:0">ผู้เล่นที่จับคู่</h3>
+          <div id="mateBox" class="pbox">
+            <span class="chip red">Player 2</span>
+            <span id="mateName" class="badge">กำลังค้นหา...</span>
+            <span id="mateDiff" class="badge">-</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section id="game" class="card hidden">
+      <div class="hud">
+        <div style="width:100%">
+          <div class="row" style="justify-content:space-between">
+            <div class="bossName" id="bossName">CYBER GOLEM</div>
+            <div class="timer" id="timer">⏳ 0.00 s</div>
+          </div>
+          <div class="hpbar"><div id="hp" class="hp" style="width:100%"></div></div>
+        </div>
+
+        <div class="players">
+          <div class="pbox">
+            <span class="chip blue">Player 1</span>
+            <strong id="p1Name">-</strong>
+            <div class="buffs" id="buffsP1"></div>
+          </div>
+          <div class="pbox">
+            <span class="chip red">Player 2</span>
+            <strong id="p2Name">-</strong>
+            <div class="buffs" id="buffsP2"></div>
+          </div>
+        </div>
+
+        <div class="ready" id="roundInfo">READY…</div>
+
+        <div class="wordBox">
+          <div id="word" class="wordTarget">—</div>
+          <button id="fireBtn" class="btn fire">ยิง! 🔥</button>
+        </div>
+        <input id="answer" class="wordTarget" type="text" placeholder="พิมพ์คำที่เห็นแล้วกด Enter" autocomplete="off"/>
+        <div id="msg" class="muted"></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Countdown overlay -->
+  <div id="overlay" class="overlay hidden"><div class="count" id="countdown">3</div></div>
+
+  <!-- Socket.io -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+
+  <script>
+  /***  CONFIGS  ***/
+  const firebaseConfig = {
+    apiKey: "AIzaSyBUBIEQLU2OHw_1ataX1di6V86s0qPsr_E",
+    authDomain: "typomancer-game.firebaseapp.com",
+    projectId: "typomancer-game",
+    storageBucket: "typomancer-game.appspot.com",
+    messagingSenderId: "988104502180",
+    appId: "1:988104502180:web:62dd3b80869a131b39ef31"
+  };
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  const socket = io(); // ใช้ path /socket.io จาก Server.js
+
+  /***  DOM  ***/
+  const $ = (id)=>document.getElementById(id);
+  const lobby    = $('lobby');
+  const lobbyStatus = $('lobbyStatus');
+  const youName  = $('youName');
+  const youDiff  = $('youDiff');
+  const mateName = $('mateName');
+  const mateDiff = $('mateDiff');
+
+  const game     = $('game');
+  const p1NameEl = $('p1Name');
+  const p2NameEl = $('p2Name');
+  const hpEl     = $('hp');
+  const bossName = $('bossName');
+  const roundInfo= $('roundInfo');
+  const wordEl   = $('word');
+  const answerEl = $('answer');
+  const msgEl    = $('msg');
+  const timerEl  = $('timer');
+  const fireBtn  = $('fireBtn');
+
+  const overlay  = $('overlay');
+  const countdown= $('countdown');
+
+  /***  LOBBY STATE  ***/
+  let myName = "";
+  let myDiff = "ง่าย";
+  let roomId = null;
+  let playerIndex = 1;  // 1 หรือ 2 (ตำแหน่งเราในห้อง)
+
+  $('findBtn').addEventListener('click', ()=>{
+    const name = $('pname').value.trim();
+    const diff = $('diff').value;
+    if(!name){ alert('ใส่ชื่อก่อนนะ'); return; }
+    myName = name; myDiff = diff;
+    youName.textContent = myName;
+    youDiff.textContent = diff;
+    lobbyStatus.textContent = 'กำลังค้นหาผู้เล่น... (ความยาก: ' + diff + ')';
+    socket.emit('queue:join', { name: myName, diff: myDiff });
+    $('findBtn').disabled = true;
+  });
+
+  // จับคู่สำเร็จ
+  socket.on('match:found', (payload)=>{
+    // payload: { roomId, p1: {name,diff}, p2:{name,diff}, startIn, bossSeed }
+    roomId = payload.roomId;
+    const { p1, p2 } = payload;
+    mateName.textContent = p1.name === myName ? p2.name : p1.name;
+    mateDiff.textContent = p1.name === myName ? p2.diff : p1.diff;
+    playerIndex = (p1.name === myName) ? 1 : 2;
+
+    // ไปหน้าเกม
+    p1NameEl.textContent = p1.name;
+    p2NameEl.textContent = p2.name;
+    bossName.textContent = 'CYBER GOLEM';
+    lobby.classList.add('hidden');
+    game.classList.remove('hidden');
+
+    // นับถอยหลังเข้าเกม
+    startCountdown(payload.startIn || 3);
+
+    // เซ็ตคำแรก (server เป็นคนแจก เพื่อ sync)
+    pendingWord = ""; // รอจาก server
+  });
+
+  function startCountdown(n){
+    overlay.classList.remove('hidden');
+    let i = Math.max(1, Number(n)||3);
+    countdown.textContent = i;
+    const t = setInterval(()=>{
+      i--;
+      if(i<=0){ clearInterval(t); overlay.classList.add('hidden'); socket.emit('game:ready', { roomId }); }
+      else countdown.textContent = i;
+    },1000);
+  }
+
+  /***  GAME STATE  ***/
+  let startTime = 0;
+  let bossesDefeated = 0;
+  const MAX_BOSSES = 2;
+  let bossHP = 100;
+  let wordTimer = null;
+  let pendingWord = "";
+  let damageMultiplierP1 = 1;
+  let damageMultiplierP2 = 1;
+  let buffTimers = {1:[], 2:[]}; // เก็บ setTimeout เพื่อเคลียร์ตอนจบ
+
+  // แสดงคำใหม่
+  socket.on('word:new', ({word})=>{
+    pendingWord = word;
+    wordEl.textContent = word;
+    answerEl.value = "";
+    msgEl.textContent = "พิมพ์คำแล้วกด Enter เพื่อโจมตี!";
+    answerEl.focus();
+  });
+
+  // เริ่มเกม (server ส่งเวลาเริ่ม)
+  socket.on('game:start', ({ts})=>{
+    startTime = ts || Date.now();
+    updateTimer();
+    if(wordTimer) clearInterval(wordTimer);
+    wordTimer = setInterval(updateTimer, 100);
+  });
+
+  function updateTimer(){
+    const t = Math.max(0, Date.now()-startTime)/1000;
+    timerEl.textContent = "⏳ " + t.toFixed(2) + " s";
+  }
+
+  // อัปเดต HP บอส
+  socket.on('boss:hp', ({hp})=>{
+    bossHP = Math.max(0, Math.min(100, hp));
+    hpEl.style.width = bossHP + "%";
+  });
+
+  // แจ้งบัฟของผู้เล่น (ของใครของมัน)
+  socket.on('buff:grant', ({to, type, durMs})=>{
+    const target = (to===1) ? $('buffsP1') : $('buffsP2');
+    const pill = document.createElement('span');
+    pill.className='buff';
+    pill.textContent = (type==='x2') ? 'x2 DMG' : (type==='heal'?'Heal':'Buff');
+    target.appendChild(pill);
+    const tm = setTimeout(()=>{
+      target.removeChild(pill);
+    }, durMs || 5000);
+    buffTimers[to].push(tm);
+    // ถ้าเป็น x2 ให้บูสต์ damageMultiplier ฝั่งนั้น
+    if(type==='x2'){
+      if(to===1) damageMultiplierP1 = 2; else damageMultiplierP2 = 2;
+      setTimeout(()=>{ if(to===1) damageMultiplierP1=1; else damageMultiplierP2=1; }, durMs||5000);
+    }
+  });
+
+  // เปลี่ยนรอบ/บอสใหม่
+  socket.on('boss:new', ({index, name})=>{
+    bossesDefeated = index-1;
+    bossName.textContent = name || 'CYBER GOLEM';
+    roundInfo.textContent = `บอสตัวที่ ${index}/2`;
+    hpEl.style.width = "100%";
+  });
+
+  // คำตอบถูก/ผิด (ของเรา)
+  socket.on('word:result', ({ok, dmg, you})=>{
+    msgEl.textContent = ok ? `โดน ${dmg} HP!` : 'พิมพ์ผิด!';
+    msgEl.className = ok ? 'ok' : 'bad';
+  });
+
+  // จบเกม
+  socket.on('game:end', async ({win})=>{
+    if(wordTimer) clearInterval(wordTimer);
+    answerEl.disabled = true;
+    fireBtn.disabled = true;
+
+    // เคลียร์บัฟ
+    buffTimers[1].forEach(clearTimeout);
+    buffTimers[2].forEach(clearTimeout);
+
+    if(win){
+      const seconds = (Date.now()-startTime)/1000;
+      roundInfo.textContent = `ชนะ! ใช้เวลา ${seconds.toFixed(2)} วินาที`;
+      // บันทึกคะแนนแบบ Co-op
+      try{
+        await db.collection('leaderboard_coop').add({
+          name: `${p1NameEl.textContent} & ${p2NameEl.textContent} (Co-op)`,
+          time: Number(seconds.toFixed(2)),
+          mode: myDiff, // 'ง่าย' | 'ยาก'
+          bossesDefeated: MAX_BOSSES,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+        });
+      }catch(err){ console.error('save coop score error:', err); }
+    }else{
+      roundInfo.textContent = `พ่ายแพ้…`;
+    }
+  });
+
+  // ส่งคำตอบ
+  function tryFire(){
+    const v = answerEl.value.trim();
+    if(!v || !pendingWord) return;
+    socket.emit('word:submit', {
+      roomId, text: v,
+      who: playerIndex,
+      dmgMul: (playerIndex===1?damageMultiplierP1:damageMultiplierP2)
+    });
+  }
+  fireBtn.addEventListener('click', tryFire);
+  answerEl.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter') tryFire();
+  });
+  
+
+</script>
+</body>
+</html>
