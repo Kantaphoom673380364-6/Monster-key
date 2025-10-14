@@ -10,9 +10,9 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 // ======== ✅ ให้ Express เสิร์ฟไฟล์ Static ========
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname))); // เสิร์ฟไฟล์ทุกอย่างในโฟลเดอร์เดียวกับ Server.js
 
-// ======== ✅ Routing หลัก ========
+// ======== ✅ Route หลัก (index.html) ========
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
