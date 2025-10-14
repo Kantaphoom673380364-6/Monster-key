@@ -2,381 +2,388 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>Monster Key – CO-OP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="preconnect" href="https://fonts.googleapis.com"/>
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+Thai:wght@400;600&display=swap" rel="stylesheet"/>
+  <title>Monster Key – Co‑op</title>
+
+  <!-- Socket.io client (served from your Node server) -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- Firebase (client SDK for saving leaderboard) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+
   <style>
-    :root{
-      --gold:#fca311; --gold-soft:#ffca7b; --bg:#171727; --panel:rgba(23,23,39,.85); --text:#e9e9f0; --danger:#ff4d4d; --good:#55e076;
+    :root {
+      --bg: #0f1424;
+      --panel: rgba(23,23,39,0.9);
+      --gold: #fca311;
+      --good: #55e076;
+      --bad: #ff4d4d;
+      --blue: #4da3ff;
+      --red: #ff6b6b;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; color:var(--text); font-family:'Noto Sans Thai', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:#1a1a2e url('assets/images/background.jpg') center/cover no-repeat fixed;
-      display:flex; align-items:center; justify-content:center; overflow:hidden;
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0;
+      font-family: "Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 800px at 70% -10%, #1f2540 0%, var(--bg) 55%);
+      color: #e6e8ef;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
     }
-    .shell{width:min(1200px,96vw); display:grid; grid-template-columns:1fr; gap:22px;}
-    h1,h2,h3{font-family:'Cinzel', serif; letter-spacing:.5px}
-    .card{
-      background:var(--panel); border:2px solid var(--gold); border-radius:18px; box-shadow:0 0 25px rgba(252,163,17,.30);
-      padding:22px;
+    .card {
+      width: min(980px, 92vw);
+      background: var(--panel);
+      border: 2px solid var(--gold);
+      border-radius: 18px;
+      padding: 20px;
+      box-shadow: 0 0 26px rgba(252,163,17,.28);
     }
-    .title{
-      margin:0 0 10px; font-size:42px; text-align:center; color:var(--gold-soft);
-      text-shadow:0 0 10px var(--gold);
+    h1 {
+      font-family: Cinzel, Georgia, serif;
+      letter-spacing: .5px;
+      margin: 8px 0 18px;
+      text-align: center;
+      background: linear-gradient(90deg, #ffae42, #fff2cc, #fca311, #ffffff, #ffae42);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-size: 200% 100%;
+      animation: shine 4s linear infinite;
+      font-size: clamp(26px, 3.2vw, 38px);
     }
-    .row{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
-    label{min-width:110px}
-    input[type="text"], select{
-      height:44px; padding:0 12px; border:1px solid #444; background:#0f0f1b; color:var(--text); border-radius:10px; outline:none;
-    }
-    input[type="text"]::placeholder{color:#9aa}
-    .btn{
-      cursor:pointer; border:none; background:var(--gold); color:#1a1a2e; font-weight:700; height:48px; padding:0 18px; border-radius:12px;
-      box-shadow:0 0 14px var(--gold); transition:transform .12s ease, box-shadow .2s;
-    }
-    .btn:hover{transform:translateY(-1px)}
-    .btn[disabled]{opacity:.55; cursor:not-allowed; transform:none; box-shadow:none}
-    .muted{opacity:.75}
-    .status{min-height:26px}
-    .split{display:grid; grid-template-columns:1fr 1fr; gap:18px}
-    .hidden{display:none !important}
+    @keyframes shine { 0%{background-position:200% 0}100%{background-position:-200% 0} }
 
-    /* GAME */
-    .hud{
-      display:grid; grid-template-columns:1fr; gap:18px; place-items:center; text-align:center;
+    .row { display: grid; gap: 14px; }
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1.4fr .8fr auto;
+      gap: 10px;
+      align-items: center;
     }
-    .bossName{font-size:36px; text-shadow:0 0 6px #000}
-    .hpbar{width:100%; height:18px; background:#2b2b3f; border-radius:10px; overflow:hidden; border:1px solid #0009}
-    .hp{height:100%; background:linear-gradient(90deg,#ff5656,#ff1e1e); width:100%; transition:width .18s ease}
-    .players{
-      width:100%; display:flex; justify-content:space-between; align-items:center; padding:6px 10px; gap:10px;
+    input, select, button {
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #364169;
+      background: #121933;
+      color: #e6e8ef;
+      outline: none;
+      font-size: 15px;
     }
-    .pbox{min-width:240px; border:1px dashed #444; border-radius:12px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:8px}
-    .chip{padding:4px 10px; border-radius:999px; font-weight:700}
-    .chip.blue{background:#2b4fff33; color:#9db3ff}
-    .chip.red{background:#ff2b2b33; color:#ff9d9d}
-    .badge{padding:2px 8px; border-radius:999px; border:1px solid #444}
-    .ready{font-size:28px; letter-spacing:1px; margin-top:6px}
-    .wordBox{
-      width:100%; display:flex; gap:10px; align-items:center
+    button.cta {
+      border: 2px solid var(--gold);
+      background: #1a1f38;
+      cursor: pointer;
+      transition: .2s ease;
+      font-weight: 700;
+      letter-spacing: .2px;
     }
-    .wordTarget{
-      flex:1; height:52px; display:flex; align-items:center; padding:0 14px; border-radius:12px; background:#0f0f1b; border:1px solid #303048;
-      font-size:20px; letter-spacing:.6px
-    }
-    .fire{min-width:110px}
-    .ok{color:var(--good)} .bad{color:var(--danger)}
-    .buffs{display:flex; gap:10px}
-    .buff{border:1px solid #444; padding:2px 8px; border-radius:8px; font-size:13px}
-    .timer{font-family:'Cinzel',serif; letter-spacing:1px}
+    button.cta:hover { transform: translateY(-1px); box-shadow: 0 0 18px rgba(252,163,17,.35); }
 
-    /* Countdown overlay */
-    .overlay{
-      position:fixed; inset:0; background:rgba(0,0,0,.6); display:flex; align-items:center; justify-content:center; z-index:50
-    }
-    .count{font-family:'Cinzel',serif; font-size:120px; color:#fff; text-shadow:0 0 20px #000, 0 0 30px var(--gold);}
+    .muted { color: #9aa3c3; font-size: 14px; }
 
-    /* mobile */
-    @media (max-width:900px){
-      .split{grid-template-columns:1fr}
-      .players{flex-direction:column; gap:8px}
-      .pbox{width:100%}
+    .hidden { display: none !important; }
+
+    /* Lobby */
+    .pill { display: inline-flex; gap: 8px; align-items: center; padding: 8px 12px; background:#101632; border:1px solid #2a3561; border-radius: 999px; }
+    .dot { width:10px; height:10px; border-radius:50%; background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+
+    /* Game area */
+    .game-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
     }
+    .playerBox {
+      padding: 12px;
+      border-radius: 14px;
+      border: 1px solid #2a3561;
+      background: #121933;
+    }
+    .playerBox h3 { margin: 0 0 8px; font-weight: 800; font-size: 16px; }
+    .p1 h3 { color: var(--blue); }
+    .p2 h3 { color: var(--red); }
+    .buffTag {
+      font-size: 12px;
+      border: 1px dashed var(--gold);
+      padding: 4px 8px;
+      border-radius: 999px;
+      margin-left: 8px;
+      color: var(--gold);
+    }
+
+    .bossBox {
+      grid-column: 1 / -1;
+      padding: 14px;
+      border: 1px solid #2a3561;
+      border-radius: 14px;
+      background: #101632;
+      text-align: center;
+    }
+    .hpBarOuter { width: 100%; height: 16px; border-radius: 999px; background: #2c2f4a; overflow: hidden; border: 1px solid #39406b; }
+    .hpBarInner { height: 100%; width:100%; background: linear-gradient(90deg, #ff6961, #ff3838); transition: width .15s linear; }
+    .word {
+      font-size: clamp(22px, 3vw, 28px);
+      letter-spacing: .8px;
+      margin: 10px 0 6px;
+    }
+    .mini {
+      font-size: 12px; color: #9aa3c3;
+    }
+    .center { text-align:center; }
+    .flex { display:flex; gap:10px; align-items:center; justify-content:center; }
   </style>
 </head>
 <body>
-  <div class="shell">
+  <div class="card">
+    <h1>Monster Key – โหมด Co‑op ออนไลน์ ⚔️</h1>
 
-    <!-- LOBBY -->
-    <section id="lobby" class="card">
-      <h1 class="title">CO-OP MODE</h1>
-      <div class="row">
-        <label for="pname">ชื่อผู้เล่น</label>
-        <input id="pname" type="text" placeholder="พิมพ์ชื่อของคุณ..." maxlength="18"/>
-        <label for="diff">ความยาก</label>
-        <select id="diff">
-          <option value="ง่าย">ง่าย</option>
-          <option value="ยาก">ยาก</option>
+    <!-- ============= SETUP ============= -->
+    <section id="setup" class="row">
+      <div class="setup-grid">
+        <input id="playerName" placeholder="ชื่อผู้เล่นของคุณ (จะแสดงในสกอร์)" />
+        <select id="difficulty">
+          <option value="easy">ง่าย</option>
+          <option value="hard">ยาก</option>
         </select>
-        <button id="findBtn" class="btn">ค้นหาผู้เล่น</button>
+        <button id="findBtn" class="cta">ค้นหาผู้เล่น</button>
       </div>
-      <div id="lobbyStatus" class="status muted">กรอกชื่อและเลือกความยากให้ตรงกับอีกฝ่าย จากนั้นกด “ค้นหาผู้เล่น”</div>
-      <div class="split">
-        <div class="card">
-          <h3 style="margin-top:0">ผู้เล่นของคุณ</h3>
-          <div id="youBox" class="pbox">
-            <span class="chip blue">Player 1</span>
-            <span id="youName" class="badge">-</span>
-            <span id="youDiff" class="badge">-</span>
-          </div>
-        </div>
-        <div class="card">
-          <h3 style="margin-top:0">ผู้เล่นที่จับคู่</h3>
-          <div id="mateBox" class="pbox">
-            <span class="chip red">Player 2</span>
-            <span id="mateName" class="badge">กำลังค้นหา...</span>
-            <span id="mateDiff" class="badge">-</span>
-          </div>
-        </div>
-      </div>
+      <div class="muted">ทั้งสองฝั่งต้องเลือกความยากเหมือนกัน ระบบจึงจะจับคู่ให้</div>
     </section>
 
-    <!-- GAME -->
-    <section id="game" class="card hidden">
-      <div class="hud">
-        <div style="width:100%">
-          <div class="row" style="justify-content:space-between">
-            <div class="bossName" id="bossName">CYBER GOLEM</div>
-            <div class="timer" id="timer">⏳ 0.00 s</div>
-          </div>
-          <div class="hpbar"><div id="hp" class="hp" style="width:100%"></div></div>
-        </div>
+    <!-- ============= LOBBY ============= -->
+    <section id="lobby" class="row hidden center">
+      <div class="pill"><span class="dot"></span> กำลังค้นหาผู้เล่นที่เลือกความยากเดียวกัน…</div>
+      <div id="lobbyInfo" class="muted"></div>
+    </section>
 
-        <div class="players">
-          <div class="pbox">
-            <span class="chip blue">Player 1</span>
-            <strong id="p1Name">-</strong>
-            <div class="buffs" id="buffsP1"></div>
-          </div>
-          <div class="pbox">
-            <span class="chip red">Player 2</span>
-            <strong id="p2Name">-</strong>
-            <div class="buffs" id="buffsP2"></div>
+    <!-- ============= GAME ============= -->
+    <section id="game" class="row hidden">
+      <div class="game-grid">
+        <!-- Players -->
+        <div class="playerBox p1">
+          <h3>Player (คุณ) <span id="buffMe" class="buffTag hidden">พลังโจมตี x2</span></h3>
+          <div class="flex">
+            <input id="inputMe" placeholder="พิมพ์คำแล้วกด Enter เพื่อโจมตี" />
+            <button id="fireMe" class="cta">ยิง</button>
           </div>
         </div>
-
-        <div class="ready" id="roundInfo">READY…</div>
-
-        <div class="wordBox">
-          <div id="word" class="wordTarget">—</div>
-          <button id="fireBtn" class="btn fire">ยิง! 🔥</button>
+        <div class="playerBox p2">
+          <h3>ผู้เล่นร่วมทีม <span id="buffMate" class="buffTag hidden">พลังโจมตี x2</span></h3>
+          <div class="muted">ระบบจะแสดงผลการโจมตีของอีกฝั่งแบบเรียลไทม์</div>
         </div>
-        <input id="answer" class="wordTarget" type="text" placeholder="พิมพ์คำที่เห็นแล้วกด Enter" autocomplete="off"/>
-        <div id="msg" class="muted"></div>
+
+        <!-- Boss -->
+        <div class="bossBox">
+          <div><strong id="bossName">บอส 1/2</strong></div>
+          <div class="hpBarOuter"><div id="hpInner" class="hpBarInner"></div></div>
+          <div class="word" id="wordBox">ready…</div>
+          <div class="mini" id="statusBox">เริ่มเมื่อพร้อม</div>
+        </div>
       </div>
     </section>
   </div>
 
-  <!-- Countdown overlay -->
-  <div id="overlay" class="overlay hidden"><div class="count" id="countdown">3</div></div>
-
-  <!-- Socket.io -->
-  <script src="/socket.io/socket.io.js"></script>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
-
   <script>
-  /***  CONFIGS  ***/
-  const firebaseConfig = {
-    apiKey: "AIzaSyBUBIEQLU2OHw_1ataX1di6V86s0qPsr_E",
-    authDomain: "typomancer-game.firebaseapp.com",
-    projectId: "typomancer-game",
-    storageBucket: "typomancer-game.appspot.com",
-    messagingSenderId: "988104502180",
-    appId: "1:988104502180:web:62dd3b80869a131b39ef31"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+    // ==================== Firebase ====================
+    const firebaseConfig = {
+      apiKey: "AIzaSyBUBIEQLU2OHw_1ataX1di6V86s0qPsr_E",
+      authDomain: "typomancer-game.firebaseapp.com",
+      projectId: "typomancer-game",
+      storageBucket: "typomancer-game.appspot.com",
+      messagingSenderId: "988104502180",
+      appId: "1:988104502180:web:62dd3b80869a131b39ef31"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-  const socket = io(); // ใช้ path /socket.io จาก Server.js
+    // ==================== Socket.io ====================
+    // เชื่อมกับเซิร์ฟเวอร์เดียวกัน (Same-origin)
+    const socket = io();
 
-  /***  DOM  ***/
-  const $ = (id)=>document.getElementById(id);
-  const lobby    = $('lobby');
-  const lobbyStatus = $('lobbyStatus');
-  const youName  = $('youName');
-  const youDiff  = $('youDiff');
-  const mateName = $('mateName');
-  const mateDiff = $('mateDiff');
+    // ==================== State ====================
+    const setupEl = document.getElementById("setup");
+    const lobbyEl = document.getElementById("lobby");
+    const lobbyInfo = document.getElementById("lobbyInfo");
+    const gameEl  = document.getElementById("game");
+    const inputMe = document.getElementById("inputMe");
+    const fireMe  = document.getElementById("fireMe");
+    const wordBox = document.getElementById("wordBox");
+    const statusBox = document.getElementById("statusBox");
+    const hpInner = document.getElementById("hpInner");
+    const bossNameEl = document.getElementById("bossName");
+    const buffMeTag = document.getElementById("buffMe");
+    const buffMateTag = document.getElementById("buffMate");
 
-  const game     = $('game');
-  const p1NameEl = $('p1Name');
-  const p2NameEl = $('p2Name');
-  const hpEl     = $('hp');
-  const bossName = $('bossName');
-  const roundInfo= $('roundInfo');
-  const wordEl   = $('word');
-  const answerEl = $('answer');
-  const msgEl    = $('msg');
-  const timerEl  = $('timer');
-  const fireBtn  = $('fireBtn');
+    let roomId = null;
+    let myName = "";
+    let mateName = "";
+    let difficulty = "easy";
 
-  const overlay  = $('overlay');
-  const countdown= $('countdown');
+    // คำศัพท์ตัวอย่าง (ควรแทนที่ด้วยของจริงถ้ามี)
+    const WORDS = ["shadow","strike","ninja","katana","spirit","arcane","ember","void","storm","phantom","dragon","crimson","azure","onyx","quake","thunder"];
+    function randWord(){ return WORDS[Math.floor(Math.random()*WORDS.length)]; }
 
-  /***  LOBBY STATE  ***/
-  let myName = "";
-  let myDiff = "ง่าย";
-  let roomId = null;
-  let playerIndex = 1;  // 1 หรือ 2 (ตำแหน่งเราในห้อง)
+    // บอส 2 ตัว
+    const BOSS_LIST = [
+      { name: "Orc Warlord", maxHp: 1200, baseDmg: 50 },
+      { name: "Demon Overlord", maxHp: 1600, baseDmg: 50 }
+    ];
+    let bossIndex = 0;
+    let bossHp = BOSS_LIST[0].maxHp;
 
-  $('findBtn').addEventListener('click', ()=>{
-    const name = $('pname').value.trim();
-    const diff = $('diff').value;
-    if(!name){ alert('ใส่ชื่อก่อนนะ'); return; }
-    myName = name; myDiff = diff;
-    youName.textContent = myName;
-    youDiff.textContent = diff;
-    lobbyStatus.textContent = 'กำลังค้นหาผู้เล่น... (ความยาก: ' + diff + ')';
-    socket.emit('queue:join', { name: myName, diff: myDiff });
-    $('findBtn').disabled = true;
-  });
+    // Buff (แยกกันสองฝั่ง)
+    let myBuff = { active:false, until:0, mult:2 };
+    let mateBuff = { active:false, until:0, mult:2 };
 
-  // จับคู่สำเร็จ
-  socket.on('match:found', (payload)=>{
-    // payload: { roomId, p1: {name,diff}, p2:{name,diff}, startIn, bossSeed }
-    roomId = payload.roomId;
-    const { p1, p2 } = payload;
-    mateName.textContent = p1.name === myName ? p2.name : p1.name;
-    mateDiff.textContent = p1.name === myName ? p2.diff : p1.diff;
-    playerIndex = (p1.name === myName) ? 1 : 2;
+    // เวลา / ชนะ
+    let startTime = 0;
+    let bossesDefeated = 0;
+    let finished = false;
 
-    // ไปหน้าเกม
-    p1NameEl.textContent = p1.name;
-    p2NameEl.textContent = p2.name;
-    bossName.textContent = 'CYBER GOLEM';
-    lobby.classList.add('hidden');
-    game.classList.remove('hidden');
-
-    // นับถอยหลังเข้าเกม
-    startCountdown(payload.startIn || 3);
-
-    // เซ็ตคำแรก (server เป็นคนแจก เพื่อ sync)
-    pendingWord = ""; // รอจาก server
-  });
-
-  function startCountdown(n){
-    overlay.classList.remove('hidden');
-    let i = Math.max(1, Number(n)||3);
-    countdown.textContent = i;
-    const t = setInterval(()=>{
-      i--;
-      if(i<=0){ clearInterval(t); overlay.classList.add('hidden'); socket.emit('game:ready', { roomId }); }
-      else countdown.textContent = i;
-    },1000);
-  }
-
-  /***  GAME STATE  ***/
-  let startTime = 0;
-  let bossesDefeated = 0;
-  const MAX_BOSSES = 2;
-  let bossHP = 100;
-  let wordTimer = null;
-  let pendingWord = "";
-  let damageMultiplierP1 = 1;
-  let damageMultiplierP2 = 1;
-  let buffTimers = {1:[], 2:[]}; // เก็บ setTimeout เพื่อเคลียร์ตอนจบ
-
-  // แสดงคำใหม่
-  socket.on('word:new', ({word})=>{
-    pendingWord = word;
-    wordEl.textContent = word;
-    answerEl.value = "";
-    msgEl.textContent = "พิมพ์คำแล้วกด Enter เพื่อโจมตี!";
-    answerEl.focus();
-  });
-
-  // เริ่มเกม (server ส่งเวลาเริ่ม)
-  socket.on('game:start', ({ts})=>{
-    startTime = ts || Date.now();
-    updateTimer();
-    if(wordTimer) clearInterval(wordTimer);
-    wordTimer = setInterval(updateTimer, 100);
-  });
-
-  function updateTimer(){
-    const t = Math.max(0, Date.now()-startTime)/1000;
-    timerEl.textContent = "⏳ " + t.toFixed(2) + " s";
-  }
-
-  // อัปเดต HP บอส
-  socket.on('boss:hp', ({hp})=>{
-    bossHP = Math.max(0, Math.min(100, hp));
-    hpEl.style.width = bossHP + "%";
-  });
-
-  // แจ้งบัฟของผู้เล่น (ของใครของมัน)
-  socket.on('buff:grant', ({to, type, durMs})=>{
-    const target = (to===1) ? $('buffsP1') : $('buffsP2');
-    const pill = document.createElement('span');
-    pill.className='buff';
-    pill.textContent = (type==='x2') ? 'x2 DMG' : (type==='heal'?'Heal':'Buff');
-    target.appendChild(pill);
-    const tm = setTimeout(()=>{
-      target.removeChild(pill);
-    }, durMs || 5000);
-    buffTimers[to].push(tm);
-    // ถ้าเป็น x2 ให้บูสต์ damageMultiplier ฝั่งนั้น
-    if(type==='x2'){
-      if(to===1) damageMultiplierP1 = 2; else damageMultiplierP2 = 2;
-      setTimeout(()=>{ if(to===1) damageMultiplierP1=1; else damageMultiplierP2=1; }, durMs||5000);
+    function setHpBar() {
+      const pct = Math.max(0, Math.round((bossHp / BOSS_LIST[bossIndex].maxHp) * 100));
+      hpInner.style.width = pct + "%";
     }
-  });
 
-  // เปลี่ยนรอบ/บอสใหม่
-  socket.on('boss:new', ({index, name})=>{
-    bossesDefeated = index-1;
-    bossName.textContent = name || 'CYBER GOLEM';
-    roundInfo.textContent = `บอสตัวที่ ${index}/2`;
-    hpEl.style.width = "100%";
-  });
-
-  // คำตอบถูก/ผิด (ของเรา)
-  socket.on('word:result', ({ok, dmg, you})=>{
-    msgEl.textContent = ok ? `โดน ${dmg} HP!` : 'พิมพ์ผิด!';
-    msgEl.className = ok ? 'ok' : 'bad';
-  });
-
-  // จบเกม
-  socket.on('game:end', async ({win})=>{
-    if(wordTimer) clearInterval(wordTimer);
-    answerEl.disabled = true;
-    fireBtn.disabled = true;
-
-    // เคลียร์บัฟ
-    buffTimers[1].forEach(clearTimeout);
-    buffTimers[2].forEach(clearTimeout);
-
-    if(win){
-      const seconds = (Date.now()-startTime)/1000;
-      roundInfo.textContent = `ชนะ! ใช้เวลา ${seconds.toFixed(2)} วินาที`;
-      // บันทึกคะแนนแบบ Co-op
-      try{
-        await db.collection('leaderboard_coop').add({
-          name: `${p1NameEl.textContent} & ${p2NameEl.textContent} (Co-op)`,
-          time: Number(seconds.toFixed(2)),
-          mode: myDiff, // 'ง่าย' | 'ยาก'
-          bossesDefeated: MAX_BOSSES,
-          timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-        });
-      }catch(err){ console.error('save coop score error:', err); }
-    }else{
-      roundInfo.textContent = `พ่ายแพ้…`;
+    function newWord() {
+      wordBox.textContent = randWord();
+      inputMe.value = "";
+      inputMe.focus();
     }
-  });
 
-  // ส่งคำตอบ
-  function tryFire(){
-    const v = answerEl.value.trim();
-    if(!v || !pendingWord) return;
-    socket.emit('word:submit', {
-      roomId, text: v,
-      who: playerIndex,
-      dmgMul: (playerIndex===1?damageMultiplierP1:damageMultiplierP2)
+    function startFight() {
+      const b = BOSS_LIST[bossIndex];
+      bossHp = b.maxHp;
+      bossNameEl.textContent = `${b.name} (${bossIndex+1}/2)`;
+      statusBox.textContent = "พิมพ์คำให้ถูกเพื่อโจมตีบอส!";
+      setHpBar();
+      newWord();
+      if (bossIndex === 0) startTime = Date.now();
+    }
+
+    function tryBuffActivate() {
+      // โอกาส 18% ต่อคำ
+      if (!myBuff.active && Math.random() < 0.18) {
+        myBuff.active = true;
+        myBuff.until = Date.now() + 8000;
+        buffMeTag.classList.remove("hidden");
+        // แจ้งอีกฝั่งให้โชว์สถานะของเรา
+        socket.emit("syncBuff", { roomId, who:"me", active:true, until:myBuff.until });
+        // ตั้ง timeout ปิดบัฟ
+        setTimeout(()=>{
+          myBuff.active = false;
+          buffMeTag.classList.add("hidden");
+          socket.emit("syncBuff", { roomId, who:"me", active:false, until:0 });
+        }, 8000);
+      }
+    }
+
+    function onCorrectWord() {
+      const base = (difficulty === "hard") ? 140 : 90;
+      const dmg = myBuff.active ? base * myBuff.mult : base;
+      socket.emit("attackBoss", { roomId, damage: dmg });
+      tryBuffActivate();
+      newWord();
+    }
+
+    // คลิก/กด Enter เพื่อยิง
+    fireMe.addEventListener("click", ()=>{
+      if (inputMe.value.trim().toLowerCase() === wordBox.textContent) onCorrectWord();
+      else statusBox.textContent = "สะกดผิด ลองใหม่!";
     });
-  }
-  fireBtn.addEventListener('click', tryFire);
-  answerEl.addEventListener('keydown', (e)=>{
-    if(e.key==='Enter') tryFire();
-  });
-  
+    inputMe.addEventListener("keydown", (e)=>{
+      if (e.key === "Enter") {
+        if (inputMe.value.trim().toLowerCase() === wordBox.textContent) onCorrectWord();
+        else statusBox.textContent = "สะกดผิด ลองใหม่!";
+      }
+    });
 
-</script>
+    // ==================== Matchmaking Flow ====================
+    document.getElementById("findBtn").addEventListener("click", () => {
+      myName = document.getElementById("playerName").value.trim();
+      difficulty = document.getElementById("difficulty").value;
+      if (!myName) { alert("กรุณากรอกชื่อก่อน"); return; }
+
+      // ขอจับคู่
+      socket.emit("findMatch", { playerName: myName, difficulty });
+      setupEl.classList.add("hidden");
+      lobbyEl.classList.remove("hidden");
+      lobbyInfo.textContent = `ชื่อของคุณ: ${myName} • ความยาก: ${difficulty === "hard" ? "ยาก" : "ง่าย"}`;
+    });
+
+    socket.on("waiting", (msg)=>{
+      lobbyInfo.textContent = msg || "กำลังรอผู้เล่นอีกคน…";
+    });
+
+    socket.on("matchFound", (payload)=>{
+      // payload: { roomId, partner }
+      roomId = payload.roomId;
+      mateName = payload.partner || "Teammate";
+      lobbyEl.classList.add("hidden");
+      gameEl.classList.remove("hidden");
+      statusBox.textContent = `ต่อสู้ร่วมกับ ${mateName}!`;
+      bossIndex = 0;
+      startFight();
+    });
+
+    // ==================== Real-time Combat Sync ====================
+    socket.on("bossAttacked", (dmg)=>{
+      // อีกฝั่งหรือเราทำดาเมจ → หัก HP ร่วมกัน
+      bossHp -= dmg;
+      setHpBar();
+
+      if (bossHp <= 0 && !finished) {
+        bossesDefeated++;
+        if (bossIndex === 0) {
+          // ไปตัวที่ 2
+          bossIndex = 1;
+          setTimeout(startFight, 400);
+        } else {
+          // เคลียร์เกม
+          finished = true;
+          const totalTimeSec = (Date.now() - startTime) / 1000;
+          statusBox.textContent = `กำจัดบอสครบ! เวลา ${totalTimeSec.toFixed(2)} วิ`;
+          saveCoopScore(totalTimeSec);
+        }
+      }
+    });
+
+    socket.on("buffSync", ({ who, active })=>{
+      // โชว์สถานะบัฟของอีกฝั่งเท่านั้น
+      if (who === "me") return; // ข้อมูลของเราเองไม่ต้องทับ
+      if (active) buffMateTag.classList.remove("hidden");
+      else buffMateTag.classList.add("hidden");
+    });
+
+    // ==================== Save to Firestore (Co-op board) ====================
+    async function saveCoopScore(totalSec) {
+      try {
+        const pairName = `${myName} & ${mateName} (Co-op)`;
+        await db.collection("leaderboard").add({
+          name: pairName,
+          time: totalSec,
+          bossesDefeated: 2,
+          mode: (difficulty === "hard") ? "ยาก" : "ง่าย",
+          gameType: "coop",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        statusBox.textContent += " • บันทึกคะแนนสำเร็จ!";
+      } catch (e) {
+        console.error("saveCoopScore error", e);
+        statusBox.textContent += " • บันทึกคะแนนล้มเหลว";
+      }
+    }
+
+    // ==================== Helper socket relays ====================
+    // แจ้งอีกฝั่งเรื่องบัฟของเรา
+    socket.on("connect", ()=>{
+      // connected
+    });
+
+    // เมื่อเราเปิด/ปิดบัฟ → แจ้งผ่าน emit แล้ว server ต้อง broadcast เป็น 'buffSync'
+    // (ใน Server.js ให้รองรับ event 'syncBuff' → io.to(roomId).emit('buffSync', payload))
+
+  </script>
 </body>
 </html>
