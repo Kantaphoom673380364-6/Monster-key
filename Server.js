@@ -13,9 +13,12 @@ const io = new Server(server);
 app.use(express.static(path.join(__dirname))); // เสิร์ฟไฟล์ทุกอย่างในโฟลเดอร์เดียวกับ Server.js
 
 // ======== ✅ Route หลัก (index.html) ========
+app.use(express.static(path.join(__dirname, "public")));
+
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
+
 
 // ======== ✅ Socket.IO สำหรับ Co-op Mode ========
 let players = {};
