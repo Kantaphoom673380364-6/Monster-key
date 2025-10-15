@@ -252,7 +252,7 @@
      <div id="leaderboards-wrapper">
     <div class="leaderboard-box">
       <h2 id="leaderboard-coop-title">🏆 Leaderboard – Co-op 🏆</h2>
-      <ul id="leaderboard-coop"></ul>
+      <ul id="coop-leaderboard-list"></ul> 
     </div>
   </div>
 
@@ -281,7 +281,7 @@
         </div>
     </div>
 
-    <audio id="background-music" src="assets/bg_music.mp3" loop preload="auto"></audio>
+    <audio id="background-music" src="assets/bg_music.mp3" loop autoplay preload="auto"></audio>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
     <script>
@@ -299,8 +299,7 @@
         const translations = {
             en: {
                 startSolo: "Start Game (SOLO)",
-                pvpMode: "CO-OP Mode (Online) ⚔️",        
-                leaderboardTitle: "🏆 Leaderboard 🏆",
+                pvpMode: "CO-OP Mode (Online) ⚔️",                        
                 coopLeaderboardTitle: "🏆 CO-OP  TOP TIER 🏆",
                 loading: "Loading...",
                 noData: "No data yet",
@@ -330,7 +329,7 @@
         const volumeButton = document.getElementById('volume-button');
         const volumeSlider = document.getElementById('volume-slider');
 
-        function setLanguage(lang) {
+  function setLanguage(lang) {
   currentLang = lang;
   localStorage.setItem("gameLanguage", lang);
   const t = translations[lang];
@@ -345,53 +344,6 @@
   displayCoopLeaderboard();
 }
 
-
-async function displayLeaderboard() {
-  const t = translations[currentLang];
-  leaderboardList.innerHTML = `<li>${t.loading}</li>`;
-
-  try {
-    const snapshot = await db.collection("leaderboard").get();
-    leaderboardList.innerHTML = '';
-
-    if (snapshot.empty) {
-      leaderboardList.innerHTML = `<li>${t.noData}</li>`;
-      return;
-    }
-
-    // ดึงข้อมูลทั้งหมดออกมา
-    const dataArr = [];
-    snapshot.forEach((doc) => dataArr.push(doc.data()));
-
-    // ✅ เรียงลำดับ: บอส > โหมด > เวลา
-    dataArr.sort((a, b) => {
-      const bossesA = a.bossesDefeated || 0;
-      const bossesB = b.bossesDefeated || 0;
-
-      if (bossesB !== bossesA) return bossesB - bossesA; // บอสมาก่อน
-      if (a.mode === 'ยาก' && b.mode !== 'ยาก') return -1; // โหมดยากมาก่อน
-      if (a.mode !== 'ยาก' && b.mode === 'ยาก') return 1;  // โหมดง่ายทีหลัง
-      return (a.time || 9999) - (b.time || 9999); // เวลาน้อยก่อน
-    });
-
-    let rank = 1;
-dataArr.slice(0, 10).forEach((data) => {
-  const timeFormatted = data.time
-    ? `${data.time.toFixed(2)} ${currentLang === 'th' ? 'วินาที' : 'sec'}`
-    : "-";
-
-  const modeText =
-    currentLang === 'th'
-      ? data.mode === 'ยาก'
-        ? '(โหมดยาก)'
-        : '(โหมดง่าย)'
-      : data.mode === 'ยาก'
-        ? '(Hard Mode)'
-        : '(Easy Mode)';
-
-    // ==========================
-// ✅ โหลดตาราง Solo / Co-op จาก Firestore
-// ==========================
 async function displayLeaderboard() {
   const t = translations[currentLang];
   const targetEl = document.getElementById("leaderboard-list");
@@ -460,47 +412,49 @@ async function displayLeaderboard() {
 }
 async function displayCoopLeaderboard() {
   const t = translations[currentLang];
-  const targetEl = document.getElementById("leaderboard-coop");
+  const targetEl = document.getElementById("coop-leaderboard-list");
+  if (!targetEl) { console.warn("coop list not found"); return; }
+
   targetEl.innerHTML = `<li>${t.loading}</li>`;
 
   try {
-    const snap = await db.collection("leaderboard_coop").get();
+    const snap = await db.collection("leaderboard_coop")
+      .orderBy("bossesDefeated", "desc")
+      .limit(10)
+      .get();
+
     if (snap.empty) {
       targetEl.innerHTML = `<li>${t.noData}</li>`;
       return;
     }
 
-    const dataArr = [];
-    snap.forEach((doc) => dataArr.push(doc.data()));
+    const rows = [];
+    snap.forEach(doc => rows.push(doc.data()));
 
-    dataArr.sort((a, b) => {
+    // สำรอง: ถ้าไม่ได้ตั้ง index ก็ใช้ sort ฝั่ง client ได้เหมือนเดิม
+    rows.sort((a, b) => {
       const bossesA = a.bossesDefeated || 0;
       const bossesB = b.bossesDefeated || 0;
-      if (bossesB !== bossesA) return bossesB - bossesA;
-      if (a.mode === "ยาก" && b.mode !== "ยาก") return -1;
-      if (a.mode !== "ยาก" && b.mode === "ยาก") return 1;
-      return (a.time || 9999) - (b.time || 9999);
+      if (bossesB !== bossesA) return bossesB - bossesA;              // มาก → น้อย
+      // โหมด: ยากมาก่อนง่าย (ใช้ 'difficulty' แทน 'mode')
+      if ((a.difficulty === "ยาก") && (b.difficulty !== "ยาก")) return -1;
+      if ((a.difficulty !== "ยาก") && (b.difficulty === "ยาก")) return 1;
+      return (a.time || 9999) - (b.time || 9999);                     // เวลา น้อย → มาก
     });
 
     targetEl.innerHTML = "";
     let rank = 1;
-
-    dataArr.slice(0, 10).forEach((data) => {
-      const time = data.time
-        ? `${data.time.toFixed(2)} ${currentLang === "th" ? "วินาที" : "sec"}`
-        : "-";
+    rows.forEach(d => {
+      const team = d.team || d.name || "-";
+      const time = d.time ? `${d.time.toFixed(2)} ${currentLang === "th" ? "วินาที" : "sec"}` : "-";
       const modeText =
         currentLang === "th"
-          ? data.mode === "ยาก"
-            ? "(โหมดยาก)"
-            : "(โหมดง่าย)"
-          : data.mode === "ยาก"
-          ? "(Hard Mode)"
-          : "(Easy Mode)";
+          ? (d.difficulty === "ยาก" ? "(โหมดยาก)" : "(โหมดง่าย)")
+          : (d.difficulty === "ยาก" ? "(Hard Mode)" : "(Easy Mode)");
       const bossText =
         currentLang === "th"
-          ? `บอส ${data.bossesDefeated || 0}/2`
-          : `Boss ${data.bossesDefeated || 0}/2`;
+          ? `บอส ${d.bossesDefeated || 0}/2`
+          : `Boss ${d.bossesDefeated || 0}/2`;
 
       let crown = "";
       if (rank === 1) crown = '<span class="glow-crown">👑</span>';
@@ -510,8 +464,8 @@ async function displayCoopLeaderboard() {
       const li = document.createElement("li");
       li.innerHTML = `
         <span>
-          #${rank} ${crown} ${data.name}
-          <span style="color:${data.mode === "ยาก" ? "#ff4d4d" : "#55e076"}">
+          #${rank} ${crown} ${team}
+          <span style="color:${d.difficulty === "ยาก" ? "#ff4d4d" : "#55e076"}">
             ${modeText}
           </span> — ${bossText}
         </span>
@@ -528,42 +482,7 @@ async function displayCoopLeaderboard() {
 window.addEventListener("DOMContentLoaded", () => {
   const savedLang = localStorage.getItem("gameLanguage") || "th";
   setLanguage(savedLang);
-  displayLeaderboard();       // ← Solo (ชื่อเดิมได้เลย)
-  displayCoopLeaderboard();   // ← Co-op (ใหม่)
 });
-
-  const bossText =
-    currentLang === 'th'
-      ? `บอส ${data.bossesDefeated || 0}/2`
-      : `Boss ${data.bossesDefeated || 0}/2`;
-
-  // 👑 มงกุฎเฉพาะ Top 3
-  let crown = '';
-  if (rank === 1) crown = '<span class="glow-crown">👑</span>';
-  else if (rank === 2) crown = '<span style="color:#e5c100;">👑</span>';
-  else if (rank === 3) crown = '<span style="color:#c9a500;">👑</span>';
-
-  const li = document.createElement('li');
-  li.innerHTML = `
-    <span>
-      #${rank} ${crown} ${data.name}
-      <span style="color:${data.mode === 'ยาก' ? '#ff4d4d' : '#55e076'}">
-        ${modeText}
-      </span>
-      — ${bossText}
-    </span>
-    <span>${timeFormatted}</span>
-  `;
-
-  leaderboardList.appendChild(li);
-  rank++;
-});
-
-  } catch (error) {
-    console.error("⚠️ เกิดข้อผิดพลาดในการโหลดตารางเวลา:", error);
-  }
-}
-
 
 
         langThButton.addEventListener('click', () => setLanguage('th'));
@@ -587,8 +506,10 @@ window.addEventListener("DOMContentLoaded", () => {
             }
         }, { once: true });
         
-        const savedLang = localStorage.getItem('gameLanguage');
-        setLanguage(savedLang || 'th');
+        
+
+
+
         
     </script>
 </body>
