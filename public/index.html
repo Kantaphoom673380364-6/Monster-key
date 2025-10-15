@@ -82,8 +82,15 @@
             margin-top: 15px;
             animation: float-glow 4s ease-in-out infinite;
         }
-        @keyframes animated-gradient { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-        @keyframes float-glow { 0% { transform: translateY(0); filter: drop-shadow(0 0 10px #fca311); } 50% { transform: translateY(-15px); filter: drop-shadow(0 0 20px #ffca7b); } 100% { transform: translateY(0); filter: drop-shadow(0 0 10px #fca311); } }
+        @keyframes animated-gradient { 
+            0% { background-position: 200% 0; } 
+            100% { background-position: -200% 0; } 
+        }
+        @keyframes float-glow { 
+            0% { transform: translateY(0); filter: drop-shadow(0 0 10px #fca311); } 
+            50% { transform: translateY(-15px); filter: drop-shadow(0 0 20px #ffca7b); } 
+            100% { transform: translateY(0); filter: drop-shadow(0 0 10px #fca311); } 
+        }
 
         #start-screen {
             margin-top: 30px;
@@ -120,15 +127,6 @@
             z-index: 10;
         }
 
-        /* ตำแหน่งของปุ่มเปลี่ยนภาษาสำหรับหน้าต่อสู้ */
-        #language-selection.battle-lang-pos {
-            position: absolute; /* เปลี่ยนเป็น absolute เพื่ออ้างอิง body */
-            top: -150px;
-            right: -500px;
-            left: auto; /* ล้างค่า left */
-            z-index: 1000; /* ให้แน่ใจว่าอยู่ด้านบนสุด */
-        }
-
         #language-selection button {
             background-color: rgb(0, 0, 0);
             border: 1px solid #fa9a00;
@@ -146,23 +144,21 @@
         .incorrect { color: #ff4141; }
         .hidden { display: none !important; }
 
-    
-
         #leaderboard-container {
-    width: 420px; /* ✅ ขยายความกว้าง */
-    background: rgba(23, 23, 39, 0.85);
-    border: 2px solid #fca311;
-    padding: 30px; /* ✅ เพิ่มพื้นที่ภายใน */
-    border-radius: 18px;
-    height: 650px; /* ✅ เพิ่มความสูง */
-    box-shadow: 0 0 25px rgba(252, 163, 17, 0.3);
-    transition: all 0.3s ease-in-out;
-}
+            width: 420px;
+            background: rgba(23, 23, 39, 0.85);
+            border: 2px solid #fca311;
+            padding: 30px;
+            border-radius: 18px;
+            height: 650px;
+            box-shadow: 0 0 25px rgba(252, 163, 17, 0.3);
+            transition: all 0.3s ease-in-out;
+        }
 
         #leaderboard-container h2 {
-             font-family: 'Cinzel', serif;
-             color: #ffca7b;
-             text-shadow: 0 0 10px #fca311;
+            font-family: 'Cinzel', serif;
+            color: #ffca7b;
+            text-shadow: 0 0 10px #fca311;
         }
         #leaderboard-list {
             list-style: none;
@@ -177,69 +173,72 @@
             font-size: 1.1em;
         }
 
-#leaderboards-wrapper {
-  display: flex;
-  gap: 25px;
-  justify-content: center;
-  align-items: flex-start;
-  margin-top: 30px;
-}
+        #leaderboards-wrapper {
+            display: flex;
+            gap: 25px;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: 30px;
+        }
 
-.leaderboard-box {
-  width: 420px;
-  background: rgba(23, 23, 39, 0.85);
-  border: 2px solid #fca311;
-  padding: 30px;
-  border-radius: 18px;
-  height: 650px;
-  box-shadow: 0 0 25px rgba(252, 163, 17, 0.3);
-  transition: all 0.3s ease-in-out;
-}
+        .leaderboard-box {
+            width: 420px;
+            background: rgba(23, 23, 39, 0.85);
+            border: 2px solid #fca311;
+            padding: 30px;
+            border-radius: 18px;
+            height: 650px;
+            box-shadow: 0 0 25px rgba(252, 163, 17, 0.3);
+            transition: all 0.3s ease-in-out;
+        }
 
-.leaderboard-box h2 {
-  font-family: 'Cinzel', serif;
-  color: #ffca7b;
-  text-shadow: 0 0 10px #fca311;
-}
+        .leaderboard-box h2 {
+            font-family: 'Cinzel', serif;
+            color: #ffca7b;
+            text-shadow: 0 0 10px #fca311;
+        }
 
-.leaderboard-box ul {
-  list-style: none;
-  padding: 0;
-  color: #e0e0e0;
-}
+        .leaderboard-box ul {
+            list-style: none;
+            padding: 0;
+            color: #e0e0e0;
+        }
 
-.leaderboard-box li {
-  display: flex;
-  justify-content: space-between;
-  padding: 8px 5px;
-  border-bottom: 1px solid rgba(252, 163, 17, 0.3);
-  font-size: 1.1em;
-}
+        .leaderboard-box li {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 5px;
+            border-bottom: 1px solid rgba(252, 163, 17, 0.3);
+            font-size: 1.1em;
+        }
 
-.leaderboard-box li:last-child { border-bottom: none; }
+        .leaderboard-box li:last-child { 
+            border-bottom: none; 
+        }
 
         #leaderboard-list li:last-child {
             border-bottom: none;
         }
+        
         .easy-mode {
             color: #55e076;
-             font-weight: bold;
-                }
-.hard-mode {
-  color: #ff4141;
-  font-weight: bold;
-}
-
-.glow-crown {
-  animation: glowPulse 1.5s infinite alternate;
-  text-shadow: 0 0 8px #ffd700, 0 0 16px #ffcc00, 0 0 24px #ffaa00;
-}
-@keyframes glowPulse {
-  from { text-shadow: 0 0 6px #ffd700, 0 0 12px #ffcc00; }
-  to   { text-shadow: 0 0 14px #ffae00, 0 0 24px #ff6600; }
-}
-
+            font-weight: bold;
+        }
         
+        .hard-mode {
+            color: #ff4141;
+            font-weight: bold;
+        }
+
+        .glow-crown {
+            animation: glowPulse 1.5s infinite alternate;
+            text-shadow: 0 0 8px #ffd700, 0 0 16px #ffcc00, 0 0 24px #ffaa00;
+        }
+        
+        @keyframes glowPulse {
+            from { text-shadow: 0 0 6px #ffd700, 0 0 12px #ffcc00; }
+            to   { text-shadow: 0 0 14px #ffae00, 0 0 24px #ff6600; }
+        }
     </style>
 </head>
 <body>
@@ -249,12 +248,13 @@
             <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3">
         </div>
     </div>
-     <div id="leaderboards-wrapper">
-    <div class="leaderboard-box">
-      <h2 id="leaderboard-coop-title">🏆 Leaderboard – Co-op 🏆</h2>
-      <ul id="coop-leaderboard-list"></ul> 
+    
+    <div id="leaderboards-wrapper">
+        <div class="leaderboard-box">
+            <h2 id="leaderboard-coop-title">🏆 Leaderboard — Co-op 🏆</h2>
+            <ul id="coop-leaderboard-list"></ul> 
+        </div>
     </div>
-  </div>
 
     <div id="main-container">
         <div id="game-container">
@@ -270,11 +270,10 @@
                 <a href="/solo.html" id="start-button" class="menu-button">เริ่มเกม (SOLO)</a>
                 <a href="/coop.html" id="pvp-button" class="menu-button">โหมด CO-OP ออนไลน์ ⚔️</a>
             </div>
-            
-  </div>
         </div>
+        
         <div id="leaderboard-container">
-             <h2 id="leaderboard-title">🏆 Leaderboard 🏆</h2>
+            <h2 id="leaderboard-title">🏆 Leaderboard 🏆</h2>
             <ul id="leaderboard-list">
                 <li>กำลังโหลด...</li>
             </ul>
@@ -282,17 +281,20 @@
     </div>
 
     <audio id="background-music" src="assets/bg_music.mp3" loop autoplay preload="auto"></audio>
+    
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+    
     <script>
         const firebaseConfig = {
-          apiKey: "AIzaSyBUBIEQLU2OHw_1ataX1di6V86s0qPsr_E",
-          authDomain: "typomancer-game.firebaseapp.com",
-          projectId: "typomancer-game",
-          storageBucket: "typomancer-game.appspot.com",
-          messagingSenderId: "988104502180",
-          appId: "1:988104502180:web:62dd3b80869a131b39ef31"
+            apiKey: "AIzaSyBUBIEQLU2OHw_1ataX1di6V86s0qPsr_E",
+            authDomain: "typomancer-game.firebaseapp.com",
+            projectId: "typomancer-game",
+            storageBucket: "typomancer-game.appspot.com",
+            messagingSenderId: "988104502180",
+            appId: "1:988104502180:web:62dd3b80869a131b39ef31"
         };
+        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
@@ -300,7 +302,7 @@
             en: {
                 startSolo: "Start Game (SOLO)",
                 pvpMode: "CO-OP Mode (Online) ⚔️",                        
-                coopLeaderboardTitle: "🏆 CO-OP  TOP TIER 🏆",
+                coopLeaderboardTitle: "🏆 CO-OP TOP TIER 🏆",
                 loading: "Loading...",
                 noData: "No data yet",
                 error: "Error",
@@ -329,188 +331,195 @@
         const volumeButton = document.getElementById('volume-button');
         const volumeSlider = document.getElementById('volume-slider');
 
-  function setLanguage(lang) {
-  currentLang = lang;
-  localStorage.setItem("gameLanguage", lang);
-  const t = translations[lang];
-  startButton.textContent = t.startSolo;
-  pvpButton.innerHTML = t.pvpMode;
-  leaderboardTitle.innerHTML = t.leaderboardTitle;
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem("gameLanguage", lang);
+            const t = translations[lang];
+            
+            if (startButton) startButton.textContent = t.startSolo;
+            if (pvpButton) pvpButton.innerHTML = t.pvpMode;
+            if (leaderboardTitle) leaderboardTitle.innerHTML = t.leaderboardTitle;
 
-  const coopLeaderboardTitle = document.getElementById("leaderboard-coop-title");
-  if (coopLeaderboardTitle) coopLeaderboardTitle.innerHTML = t.coopLeaderboardTitle;
+            const coopLeaderboardTitle = document.getElementById("leaderboard-coop-title");
+            if (coopLeaderboardTitle) coopLeaderboardTitle.innerHTML = t.coopLeaderboardTitle;
 
-  displayLeaderboard();
-  displayCoopLeaderboard();
-}
+            displayLeaderboard();
+            displayCoopLeaderboard();
+        }
 
-async function displayLeaderboard() {
-  const t = translations[currentLang];
-  const targetEl = document.getElementById("leaderboard-list");
-  targetEl.innerHTML = `<li>${t.loading}</li>`;
+        async function displayLeaderboard() {
+            const t = translations[currentLang];
+            const targetEl = document.getElementById("leaderboard-list");
+            if (!targetEl) return;
+            
+            targetEl.innerHTML = `<li>${t.loading}</li>`;
 
-  try {
-    const snap = await db.collection("leaderboard").get();
-    if (snap.empty) {
-      targetEl.innerHTML = `<li>${t.noData}</li>`;
-      return;
-    }
+            try {
+                const snap = await db.collection("leaderboard").get();
+                if (snap.empty) {
+                    targetEl.innerHTML = `<li>${t.noData}</li>`;
+                    return;
+                }
 
-    const dataArr = [];
-    snap.forEach((doc) => dataArr.push(doc.data()));
+                const dataArr = [];
+                snap.forEach((doc) => dataArr.push(doc.data()));
 
-    dataArr.sort((a, b) => {
-      const bossesA = a.bossesDefeated || 0;
-      const bossesB = b.bossesDefeated || 0;
-      if (bossesB !== bossesA) return bossesB - bossesA;
-      if (a.mode === "ยาก" && b.mode !== "ยาก") return -1;
-      if (a.mode !== "ยาก" && b.mode === "ยาก") return 1;
-      return (a.time || 9999) - (b.time || 9999);
-    });
+                dataArr.sort((a, b) => {
+                    const bossesA = a.bossesDefeated || 0;
+                    const bossesB = b.bossesDefeated || 0;
+                    if (bossesB !== bossesA) return bossesB - bossesA;
+                    if (a.mode === "ยาก" && b.mode !== "ยาก") return -1;
+                    if (a.mode !== "ยาก" && b.mode === "ยาก") return 1;
+                    return (a.time || 9999) - (b.time || 9999);
+                });
 
-    targetEl.innerHTML = "";
-    let rank = 1;
+                targetEl.innerHTML = "";
+                let rank = 1;
 
-    dataArr.slice(0, 10).forEach((data) => {
-      const time = data.time
-        ? `${data.time.toFixed(2)} ${currentLang === "th" ? "วินาที" : "sec"}`
-        : "-";
-      const modeText =
-        currentLang === "th"
-          ? data.mode === "ยาก"
-            ? "(โหมดยาก)"
-            : "(โหมดง่าย)"
-          : data.mode === "ยาก"
-          ? "(Hard Mode)"
-          : "(Easy Mode)";
-      const bossText =
-        currentLang === "th"
-          ? `บอส ${data.bossesDefeated || 0}/2`
-          : `Boss ${data.bossesDefeated || 0}/2`;
+                dataArr.slice(0, 10).forEach((data) => {
+                    const time = data.time
+                        ? `${data.time.toFixed(2)} ${currentLang === "th" ? "วินาที" : "sec"}`
+                        : "-";
+                    const modeText = currentLang === "th"
+                        ? data.mode === "ยาก" ? "(โหมดยาก)" : "(โหมดง่าย)"
+                        : data.mode === "ยาก" ? "(Hard Mode)" : "(Easy Mode)";
+                    const bossText = currentLang === "th"
+                        ? `บอส ${data.bossesDefeated || 0}/2`
+                        : `Boss ${data.bossesDefeated || 0}/2`;
 
-      let crown = "";
-      if (rank === 1) crown = '<span class="glow-crown">👑</span>';
-      else if (rank === 2) crown = '<span style="color:#e5c100;">👑</span>';
-      else if (rank === 3) crown = '<span style="color:#c9a500;">👑</span>';
+                    let crown = "";
+                    if (rank === 1) crown = '<span class="glow-crown">👑</span>';
+                    else if (rank === 2) crown = '<span style="color:#e5c100;">👑</span>';
+                    else if (rank === 3) crown = '<span style="color:#c9a500;">👑</span>';
 
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span>
-          #${rank} ${crown} ${data.name}
-          <span style="color:${data.mode === "ยาก" ? "#ff4d4d" : "#55e076"}">
-            ${modeText}
-          </span> — ${bossText}
-        </span>
-        <span>${time}</span>`;
-      targetEl.appendChild(li);
-      rank++;
-    });
-  } catch (err) {
-    console.error("Solo Error:", err);
-    targetEl.innerHTML = `<li>${t.error}</li>`;
-  }
-}
-async function displayCoopLeaderboard() {
-  const t = translations[currentLang];
-  const targetEl = document.getElementById("coop-leaderboard-list");
-  if (!targetEl) { console.warn("coop list not found"); return; }
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <span>
+                            #${rank} ${crown} ${data.name}
+                            <span style="color:${data.mode === "ยาก" ? "#ff4d4d" : "#55e076"}">
+                                ${modeText}
+                            </span> — ${bossText}
+                        </span>
+                        <span>${time}</span>`;
+                    targetEl.appendChild(li);
+                    rank++;
+                });
+            } catch (err) {
+                console.error("Solo Error:", err);
+                targetEl.innerHTML = `<li>${t.error}</li>`;
+            }
+        }
 
-  targetEl.innerHTML = `<li>${t.loading}</li>`;
+        async function displayCoopLeaderboard() {
+            const t = translations[currentLang];
+            const targetEl = document.getElementById("coop-leaderboard-list");
+            if (!targetEl) {
+                console.warn("coop-leaderboard-list not found");
+                return;
+            }
 
-  try {
-    const snap = await db.collection("leaderboard_coop")
-      .orderBy("bossesDefeated", "desc")
-      .limit(10)
-      .get();
+            targetEl.innerHTML = `<li>${t.loading}</li>`;
 
-    if (snap.empty) {
-      targetEl.innerHTML = `<li>${t.noData}</li>`;
-      return;
-    }
+            try {
+                const snap = await db.collection("leaderboard_coop")
+                    .orderBy("bossesDefeated", "desc")
+                    .limit(10)
+                    .get();
 
-    const rows = [];
-    snap.forEach(doc => rows.push(doc.data()));
+                if (snap.empty) {
+                    targetEl.innerHTML = `<li>${t.noData}</li>`;
+                    return;
+                }
 
-    // สำรอง: ถ้าไม่ได้ตั้ง index ก็ใช้ sort ฝั่ง client ได้เหมือนเดิม
-    rows.sort((a, b) => {
-      const bossesA = a.bossesDefeated || 0;
-      const bossesB = b.bossesDefeated || 0;
-      if (bossesB !== bossesA) return bossesB - bossesA;              // มาก → น้อย
-      // โหมด: ยากมาก่อนง่าย (ใช้ 'difficulty' แทน 'mode')
-      if ((a.difficulty === "ยาก") && (b.difficulty !== "ยาก")) return -1;
-      if ((a.difficulty !== "ยาก") && (b.difficulty === "ยาก")) return 1;
-      return (a.time || 9999) - (b.time || 9999);                     // เวลา น้อย → มาก
-    });
+                const rows = [];
+                snap.forEach(doc => rows.push(doc.data()));
 
-    targetEl.innerHTML = "";
-    let rank = 1;
-    rows.forEach(d => {
-      const team = d.team || d.name || "-";
-      const time = d.time ? `${d.time.toFixed(2)} ${currentLang === "th" ? "วินาที" : "sec"}` : "-";
-      const modeText =
-        currentLang === "th"
-          ? (d.difficulty === "ยาก" ? "(โหมดยาก)" : "(โหมดง่าย)")
-          : (d.difficulty === "ยาก" ? "(Hard Mode)" : "(Easy Mode)");
-      const bossText =
-        currentLang === "th"
-          ? `บอส ${d.bossesDefeated || 0}/2`
-          : `Boss ${d.bossesDefeated || 0}/2`;
+                rows.sort((a, b) => {
+                    const bossesA = a.bossesDefeated || 0;
+                    const bossesB = b.bossesDefeated || 0;
+                    if (bossesB !== bossesA) return bossesB - bossesA;
+                    if ((a.difficulty === "ยาก") && (b.difficulty !== "ยาก")) return -1;
+                    if ((a.difficulty !== "ยาก") && (b.difficulty === "ยาก")) return 1;
+                    return (a.time || 9999) - (b.time || 9999);
+                });
 
-      let crown = "";
-      if (rank === 1) crown = '<span class="glow-crown">👑</span>';
-      else if (rank === 2) crown = '<span style="color:#e5c100;">👑</span>';
-      else if (rank === 3) crown = '<span style="color:#c9a500;">👑</span>';
+                targetEl.innerHTML = "";
+                let rank = 1;
+                
+                rows.forEach(d => {
+                    const team = d.team || d.name || "-";
+                    const time = d.time 
+                        ? `${d.time.toFixed(2)} ${currentLang === "th" ? "วินาที" : "sec"}` 
+                        : "-";
+                    const modeText = currentLang === "th"
+                        ? (d.difficulty === "ยาก" ? "(โหมดยาก)" : "(โหมดง่าย)")
+                        : (d.difficulty === "ยาก" ? "(Hard Mode)" : "(Easy Mode)");
+                    const bossText = currentLang === "th"
+                        ? `บอส ${d.bossesDefeated || 0}/2`
+                        : `Boss ${d.bossesDefeated || 0}/2`;
 
-      const li = document.createElement("li");
-      li.innerHTML = `
-        <span>
-          #${rank} ${crown} ${team}
-          <span style="color:${d.difficulty === "ยาก" ? "#ff4d4d" : "#55e076"}">
-            ${modeText}
-          </span> — ${bossText}
-        </span>
-        <span>${time}</span>`;
-      targetEl.appendChild(li);
-      rank++;
-    });
-  } catch (err) {
-    console.error("Co-op Error:", err);
-    targetEl.innerHTML = `<li>${t.error}</li>`;
-  }
-}
+                    let crown = "";
+                    if (rank === 1) crown = '<span class="glow-crown">👑</span>';
+                    else if (rank === 2) crown = '<span style="color:#e5c100;">👑</span>';
+                    else if (rank === 3) crown = '<span style="color:#c9a500;">👑</span>';
 
-window.addEventListener("DOMContentLoaded", () => {
-  const savedLang = localStorage.getItem("gameLanguage") || "th";
-  setLanguage(savedLang);
-});
+                    const li = document.createElement("li");
+                    li.innerHTML = `
+                        <span>
+                            #${rank} ${crown} ${team}
+                            <span style="color:${d.difficulty === "ยาก" ? "#ff4d4d" : "#55e076"}">
+                                ${modeText}
+                            </span> — ${bossText}
+                        </span>
+                        <span>${time}</span>`;
+                    targetEl.appendChild(li);
+                    rank++;
+                });
+            } catch (err) {
+                console.error("Co-op Error:", err);
+                targetEl.innerHTML = `<li>${t.error}</li>`;
+            }
+        }
 
-
-        langThButton.addEventListener('click', () => setLanguage('th'));
-        langEnButton.addEventListener('click', () => setLanguage('en'));
-
-        volumeButton.addEventListener('click', () => {
-            backgroundMusic.muted = !backgroundMusic.muted;
-            volumeButton.innerHTML = backgroundMusic.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+        window.addEventListener("DOMContentLoaded", () => {
+            const savedLang = localStorage.getItem("gameLanguage") || "th";
+            setLanguage(savedLang);
         });
 
-        volumeSlider.addEventListener('input', (e) => {
-            backgroundMusic.volume = e.target.value;
-            backgroundMusic.muted = e.target.value == 0;
-            volumeButton.innerHTML = backgroundMusic.muted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
-        });
+        if (langThButton) langThButton.addEventListener('click', () => setLanguage('th'));
+        if (langEnButton) langEnButton.addEventListener('click', () => setLanguage('en'));
+
+        if (volumeButton) {
+            volumeButton.addEventListener('click', () => {
+                if (backgroundMusic) {
+                    backgroundMusic.muted = !backgroundMusic.muted;
+                    volumeButton.innerHTML = backgroundMusic.muted 
+                        ? '<i class="fas fa-volume-mute"></i>' 
+                        : '<i class="fas fa-volume-up"></i>';
+                }
+            });
+        }
+
+        if (volumeSlider) {
+            volumeSlider.addEventListener('input', (e) => {
+                if (backgroundMusic) {
+                    backgroundMusic.volume = e.target.value;
+                    backgroundMusic.muted = e.target.value == 0;
+                    if (volumeButton) {
+                        volumeButton.innerHTML = backgroundMusic.muted 
+                            ? '<i class="fas fa-volume-mute"></i>' 
+                            : '<i class="fas fa-volume-up"></i>';
+                    }
+                }
+            });
+        }
 
         document.body.addEventListener('click', () => {
-            if (backgroundMusic.paused) {
-                backgroundMusic.volume = volumeSlider.value;
-                backgroundMusic.play();
+            if (backgroundMusic && backgroundMusic.paused) {
+                backgroundMusic.volume = volumeSlider ? volumeSlider.value : 0.3;
+                backgroundMusic.play().catch(err => console.warn('Autoplay blocked:', err));
             }
         }, { once: true });
-        
-        
-
-
-
-        
     </script>
 </body>
 </html>
