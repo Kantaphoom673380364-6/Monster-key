@@ -2,388 +2,1064 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Monster Key – Co‑op</title>
-
-  <!-- Socket.io client (served from your Node server) -->
-  <script src="/socket.io/socket.io.js"></script>
-
-  <!-- Firebase (client SDK for saving leaderboard) -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
+  <title>Monster Key - Co-op Mode</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+Thai:wght@400&display=swap" rel="stylesheet"/>
 
   <style>
-    :root {
-      --bg: #0f1424;
-      --panel: rgba(23,23,39,0.9);
-      --gold: #fca311;
-      --good: #55e076;
-      --bad: #ff4d4d;
-      --blue: #4da3ff;
-      --red: #ff6b6b;
+    /* === ยกสไตล์หลักจาก solo มาเกือบทั้งหมด (ตัด leaderboard ของ solo ออก) === */
+    body{
+       background-image: url("assets/images/background.jpg");
+  background-size: cover;
+  background-position: center;
+  transition: background-image 0.5s ease-in-out;
+      background-color:#1a1a2e;color:#e0e0e0;font-family:"Noto Sans Thai",sans-serif;
+      display:flex;justify-content:center;align-items:center;height:100vh;margin:0;text-align:center;overflow:hidden;
+      background-image:url("assets/images/background.jpg");background-size:cover;background-position:center;position:relative;
     }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0; padding: 0;
-      font-family: "Noto Sans Thai", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: radial-gradient(1200px 800px at 70% -10%, #1f2540 0%, var(--bg) 55%);
-      color: #e6e8ef;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-    }
-    .card {
-      width: min(980px, 92vw);
-      background: var(--panel);
-      border: 2px solid var(--gold);
-      border-radius: 18px;
-      padding: 20px;
-      box-shadow: 0 0 26px rgba(252,163,17,.28);
-    }
-    h1 {
-      font-family: Cinzel, Georgia, serif;
-      letter-spacing: .5px;
-      margin: 8px 0 18px;
-      text-align: center;
-      background: linear-gradient(90deg, #ffae42, #fff2cc, #fca311, #ffffff, #ffae42);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      background-size: 200% 100%;
-      animation: shine 4s linear infinite;
-      font-size: clamp(26px, 3.2vw, 38px);
-    }
-    @keyframes shine { 0%{background-position:200% 0}100%{background-position:-200% 0} }
+    #game-container{width:900px;height:650px;background: none;border-radius:15px;box-shadow: none rgba(164,134,242,.5);
+      padding:20px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
+    #game-container.battle-mode-bg{background:none;box-shadow:none}
+    #top-right-ui{position:absolute;top:10px;left:20px;display:flex;align-items:center;gap:16px;z-index:100;background-color:rgba(26,26,46,0.3);
+      padding:10px 15px;border-radius:10px;box-shadow:0 0 15px rgba(0,0,0,.5)}
+    #back-to-menu-button{background-color:#fca311;color:#1a1a2e;border:none;border-radius:5px;padding:8px 12px;cursor:pointer}
+    #timer-container {
+  width:70px;height:70px;border-radius:50%;
+  background:rgba(26,26,46,.9);
+  border:3px solid #fca311;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  animation:pulse-timer 2s infinite ease-in-out;
+}
+    #word-to-type{font-size:2.5em;letter-spacing:5px;font-weight:bold;color:#fff;text-shadow:0 0 15px #00e5ff;height:60px;background:rgba(0,0,0,.4);
+      padding:5px 15px;border-radius:10px;display:inline-block;min-width:300px;position:relative;top:140px}
+    #player-input{width:80%;padding:15px;font-size:2.2em;text-align:center;background:rgba(255,254,254,.9);border:2px solid #c91717;border-radius:10px;
+      color:#020202;outline:none;margin:20px auto 10px auto;position:relative;top:145px}
+    .hidden{display:none!important}
+    #gameover-screen {
+  position:absolute;
+  top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.8);
+  display:flex; flex-direction:column; justify-content:center; align-items:center;
+  color:#fff; font-family:"Cinzel",serif;
+  z-index:999; border-radius:15px; backdrop-filter:blur(4px);
+}
+#gameover-title {
+  font-size:3em;
+  color:#ffcc00;
+  text-shadow:0 0 10px #ff0, 0 0 30px #f90;
+  animation:flicker 1.5s infinite alternate;
+}
+#gameover-desc {
+  font-size:1.4em;
+  margin:10px 0 20px 0;
+  text-shadow:0 0 10px #fff;
+}
+#restart-button, #back-button {
+  padding:10px 18px;
+  margin:6px;
+  border:none;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+  transition:all 0.3s;
+}
+#restart-button {
+  background-color:#28a745;
+  color:#fff;
+  box-shadow:0 0 10px #28a745;
+}
+#restart-button:hover { background-color:#34d058; transform:scale(1.05); }
 
-    .row { display: grid; gap: 14px; }
-    .setup-grid {
-      display: grid;
-      grid-template-columns: 1.4fr .8fr auto;
-      gap: 10px;
-      align-items: center;
-    }
-    input, select, button {
-      padding: 10px 12px;
-      border-radius: 10px;
-      border: 1px solid #364169;
-      background: #121933;
-      color: #e6e8ef;
-      outline: none;
-      font-size: 15px;
-    }
-    button.cta {
-      border: 2px solid var(--gold);
-      background: #1a1f38;
-      cursor: pointer;
-      transition: .2s ease;
-      font-weight: 700;
-      letter-spacing: .2px;
-    }
-    button.cta:hover { transform: translateY(-1px); box-shadow: 0 0 18px rgba(252,163,17,.35); }
+#back-button {
+  background-color:#dc3545;
+  color:#fff;
+  box-shadow:0 0 10px #dc3545;
+}
+#back-button:hover { background-color:#ff4757; transform:scale(1.05); }
 
-    .muted { color: #9aa3c3; font-size: 14px; }
 
-    .hidden { display: none !important; }
+    /* พื้นที่ต่อสู้ + หลอดเลือดบอส */
+    #monster-area{flex-grow:1;display:flex;flex-direction:column;justify-content:flex-end;position:relative}
+    #monster-name {
+        position: absolute;
+        top: -210px;
+        left: 53%;
+        transform: translateX(-50%);
+        font-family: "Cinzel", serif;
+        font-weight: 1000;
+        font-size: 3em;
+        color: hsl(0, 85%, 100%);
+        z-index: 50;
+        letter-spacing: 3px;
+        max-width: 400px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        animation: flicker-text 3s infinite linear;
+      }
+    #health-bar-container {
+  position:absolute;top:10px;left:80%;transform:translateX(-50%);
+  width:320px;height:25px;background:#111;border-radius:15px;
+  border:2px solid #630000;overflow:visible;
+  box-shadow:0 0 25px rgba(255,50,50,0.5);
 
-    /* Lobby */
-    .pill { display: inline-flex; gap: 8px; align-items: center; padding: 8px 12px; background:#101632; border:1px solid #2a3561; border-radius: 999px; }
-    .dot { width:10px; height:10px; border-radius:50%; background: var(--gold); box-shadow: 0 0 10px var(--gold); }
+  
+}
+    #health-bar {
+  width:100%;height:100%;
+  background:linear-gradient(90deg,#b30000,#ff4141);
+  border-radius:12px;transition:width .4s ease-in-out;
+  box-shadow:0 0 10px #ff4141,0 0 20px #ff1818;
+  animation:health-glow 1.6s infinite alternate;
+}
+    #battle-scene{flex-grow:1;display:flex;justify-content:space-between;align-items:flex-end;padding:0 50px;position:relative;margin-bottom:20px;background-size:cover;background-position:center bottom;border-radius:10px}
+    #player1,#player2
+    {height:800px;width:800px;transform:translateY(180px);position:absolute;bottom:0}
+    #player1
+    {left:-250px;z-index:2}
+    #player2{
+      left:100px;z-index:2;} /* วางซ้อนเล็กน้อยให้เห็นสองตัว */
+    #monster-opponent{height:780px;width:780px;transform:translateY(180px);position:absolute;right:-180px;bottom:0;z-index:1}
+    #player1 img,#player2 img,#monster-opponent img{width:100%;height:100%;object-fit:contain}
+    #monster-opponent img.hit{animation:shake .5s}
+    #timer-display {
+  font-size:1.3em;font-weight:bold;margin-top:4px;color:#fff;
+  text-shadow:0 0 6px #ff9d00;
+}
+#lobby-screen {
+  background: rgba(0, 0, 0, 0.25);
+  border: 2px solid rgba(255, 162, 0, 0.6);
+  border-radius: 18px;
+  box-shadow: 0 0 40px rgba(255, 140, 0, 0.4);
+  width: 480px;
+  padding: 40px 25px 50px 25px;
+  margin: auto;
+  position: relative;
+  top: 40px;
+  animation: fadeInLobby 1.5s ease;
+  backdrop-filter: blur(3px);
+}
+@keyframes fadeInLobby {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+#lobby-screen h2 {
+  font-family: "Cinzel", serif;
+  font-size: 2.2em;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffd369;
+  text-shadow: 0 0 15px #ff6600;
+  margin-bottom: 30px;
+}
+#player-name-input {
+  font-size: 1.1em;
+  background: rgba(255,255,255,0.15);
+  color: #fff;
+  border: 2px solid #fca311;
+  border-radius: 10px;
+  padding: 12px 18px;
+  width: 80%;
+  transition: 0.3s;
+}
+#player-name-input:focus {
+  background: rgba(255,255,255,0.25);
+  box-shadow: 0 0 15px #fca311;
+}
+.diff-btn {
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: 2px solid #fca311;
+  border-radius: 8px;
+  padding: 10px 18px;
+  margin: 0 6px;
+  cursor: pointer;
+  transition: 0.25s;
+}
+.diff-btn:hover {
+  background: #fca311;
+  color: #1a1a2e;
+  transform: scale(1.08);
+  box-shadow: 0 0 15px #fca311;
+}
+#match-button {
+  background: linear-gradient(90deg,#ff8800,#fca311);
+  border: none;
+  color: #1a1a2e;
+  border-radius: 10px;
+  padding: 14px 28px;
+  font-size: 1.1em;
+  font-weight: 900;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: 0.3s;
+  box-shadow: 0 0 15px rgba(255, 136, 0, 0.6);
+}
+#match-button:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 25px rgba(255, 180, 50, 0.8);
+}
+#match-status {
+  color: #f1f1f1;
+  font-size: 1.1em;
+  margin-top: 15px;
+  text-shadow: 0 0 10px #ffaa33;
+}
 
-    /* Game area */
-    .game-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      align-items: start;
-    }
-    .playerBox {
-      padding: 12px;
-      border-radius: 14px;
-      border: 1px solid #2a3561;
-      background: #121933;
-    }
-    .playerBox h3 { margin: 0 0 8px; font-weight: 800; font-size: 16px; }
-    .p1 h3 { color: var(--blue); }
-    .p2 h3 { color: var(--red); }
-    .buffTag {
-      font-size: 12px;
-      border: 1px dashed var(--gold);
-      padding: 4px 8px;
-      border-radius: 999px;
-      margin-left: 8px;
-      color: var(--gold);
-    }
+    @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-10px)}75%{transform:translateX(10px)}}
+    @keyframes health-glow {
+  from { box-shadow:0 0 10px #ff1818,0 0 20px #ff5252; }
+  to   { box-shadow:0 0 25px #ff4141,0 0 40px #ff0000; }
+}
+@keyframes pulse-timer {
+  0%,100% { transform:scale(1); box-shadow:0 0 10px #fca311; }
+  50%     { transform:scale(1.08); box-shadow:0 0 25px #ffda79; }
+  
+}
 
-    .bossBox {
-      grid-column: 1 / -1;
-      padding: 14px;
-      border: 1px solid #2a3561;
-      border-radius: 14px;
-      background: #101632;
-      text-align: center;
-    }
-    .hpBarOuter { width: 100%; height: 16px; border-radius: 999px; background: #2c2f4a; overflow: hidden; border: 1px solid #39406b; }
-    .hpBarInner { height: 100%; width:100%; background: linear-gradient(90deg, #ff6961, #ff3838); transition: width .15s linear; }
-    .word {
-      font-size: clamp(22px, 3vw, 28px);
-      letter-spacing: .8px;
-      margin: 10px 0 6px;
-    }
-    .mini {
-      font-size: 12px; color: #9aa3c3;
-    }
-    .center { text-align:center; }
-    .flex { display:flex; gap:10px; align-items:center; justify-content:center; }
+@keyframes flicker {
+  0% { opacity: 1; text-shadow: 0 0 10px #ff0000, 0 0 20px #ff7700; }
+  50% { opacity: 0.9; text-shadow: 0 0 18px #ff3300, 0 0 30px #ff7700; }
+  100% { opacity: 1; text-shadow: 0 0 10px #ff0000, 0 0 25px #ffaa00; }
+}
+
+.player-name-tag {
+  position: absolute;
+  color: #fff;
+  font-family: "Cinzel", serif;
+  font-weight: 900;
+  font-size: 1.4em;
+  letter-spacing: 1px;
+  text-shadow:
+    0 0 6px #000,
+    0 0 10px #ffb347,
+    0 0 25px #ff6600,
+    0 0 40px #ff3300;
+  background: linear-gradient(90deg, rgba(255,140,0,0.2), rgba(255,255,255,0.15));
+  border: 2px solid rgba(255,180,50,0.8);
+  border-radius: 10px;
+  padding: 2px 12px 4px 12px;
+  box-shadow: 0 0 15px rgba(255,100,0,0.5);
+  pointer-events: none;
+  animation: glowName 1.5s infinite alternate;
+}
+
+#p1-name {
+  top: 340px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+#p2-name {
+  top: 340px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#team-bar {
+  position: absolute;
+  top: -200px; /* ขยับขึ้นเหนือหลอดเลือดบอส */
+  left: 400%;
+  transform: translateX(-50%);
+  width: 400px; /* หรือ 100%, หรือ auto ตามต้องการ */
+  text-align: center; /* ให้ข้อความอยู่ตรงกลาง */
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: 2px solid rgba(255,180,50,0.8);
+  background: linear-gradient(90deg, rgba(255,140,0,0.25), rgba(255,255,255,0.15));
+  color: #fff;
+  font-family: "Cinzel", serif;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-shadow:
+    0 0 6px #000,
+    0 0 10px #ffb347,
+    0 0 25px #ff6600,
+    0 0 40px #ff3300;
+  box-shadow: 0 0 20px rgba(255,100,0,0.6);
+  animation: glowTeamBar 1.8s infinite alternate;
+  z-index: 3000;
+}
+
+@keyframes glowTeamBar {
+  from { text-shadow: 0 0 8px #ff6600, 0 0 18px #ffb347, 0 0 28px #ff6600; }
+  to   { text-shadow: 0 0 15px #ffaa33, 0 0 35px #ff6600, 0 0 45px #ff3300; }
+}
+
+
+    /* หัวใจ 2 ผู้เล่น */
+    .hearts-row{position:absolute;top:400px;display:flex;gap:8px;z-index:5}
+    #p1-hearts{left:40%}
+    #p2-hearts{left:43%}
+    .fa-heart{font-size:2.2rem;color:#ff4141;-webkit-text-stroke:1px black;text-shadow:0 0 8px #d32f2f}
+    .fa-heart.empty{color:#333;text-shadow:none}
+
+    /* แถบชื่อทีม */
+    #team-bar
+    {position:absolute;top:10px;right:20px;background:rgba(0,0,0,.45);padding:8px 12px;border-radius:8px;border:1px solid #fca311}
+    #buff-display{position:absolute;top:100px;left:40%;transform:translateX(-50%);font-family:'Cinzel',serif;font-size:2em;font-weight:900;color:#ff3b00;text-shadow:0 0 5px #fff,0 0 15px #faf604,0 0 25px #ff0000,0 0 45px #000;pointer-events:none;z-index:200;opacity:0;letter-spacing:2px;transition:opacity 1s ease,transform 1s ease}
+    #buff-display.damage-buff{opacity:1;transform:translate(-50%,-10px);animation:flame 1.2s infinite alternate}
+    @keyframes flame{0%{text-shadow:0 0 8px #f30,0 0 18px #f60,0 0 30px #fa0;transform:translate(-50%,-10px) scale(1)}100%{text-shadow:0 0 15px #f60,0 0 30px #fa0,0 0 50px #f30;transform:translate(-50%,-15px) scale(1.05)}}
+  @keyframes glowName {
+  from { text-shadow: 0 0 8px #ff6600, 0 0 15px #ffb347, 0 0 25px #ff6600; }
+  to   { text-shadow: 0 0 15px #ffaa33, 0 0 30px #ff6600, 0 0 45px #ff3300; }
+}
   </style>
 </head>
 <body>
-  <div class="card">
-    <h1>Monster Key – โหมด Co‑op ออนไลน์ ⚔️</h1>
-
-    <!-- ============= SETUP ============= -->
-    <section id="setup" class="row">
-      <div class="setup-grid">
-        <input id="playerName" placeholder="ชื่อผู้เล่นของคุณ (จะแสดงในสกอร์)" />
-        <select id="difficulty">
-          <option value="easy">ง่าย</option>
-          <option value="hard">ยาก</option>
-        </select>
-        <button id="findBtn" class="cta">ค้นหาผู้เล่น</button>
-      </div>
-      <div class="muted">ทั้งสองฝั่งต้องเลือกความยากเหมือนกัน ระบบจึงจะจับคู่ให้</div>
-    </section>
-
-    <!-- ============= LOBBY ============= -->
-    <section id="lobby" class="row hidden center">
-      <div class="pill"><span class="dot"></span> กำลังค้นหาผู้เล่นที่เลือกความยากเดียวกัน…</div>
-      <div id="lobbyInfo" class="muted"></div>
-    </section>
-
-    <!-- ============= GAME ============= -->
-    <section id="game" class="row hidden">
-      <div class="game-grid">
-        <!-- Players -->
-        <div class="playerBox p1">
-          <h3>Player (คุณ) <span id="buffMe" class="buffTag hidden">พลังโจมตี x2</span></h3>
-          <div class="flex">
-            <input id="inputMe" placeholder="พิมพ์คำแล้วกด Enter เพื่อโจมตี" />
-            <button id="fireMe" class="cta">ยิง</button>
-          </div>
-        </div>
-        <div class="playerBox p2">
-          <h3>ผู้เล่นร่วมทีม <span id="buffMate" class="buffTag hidden">พลังโจมตี x2</span></h3>
-          <div class="muted">ระบบจะแสดงผลการโจมตีของอีกฝั่งแบบเรียลไทม์</div>
-        </div>
-
-        <!-- Boss -->
-        <div class="bossBox">
-          <div><strong id="bossName">บอส 1/2</strong></div>
-          <div class="hpBarOuter"><div id="hpInner" class="hpBarInner"></div></div>
-          <div class="word" id="wordBox">ready…</div>
-          <div class="mini" id="statusBox">เริ่มเมื่อพร้อม</div>
-        </div>
-      </div>
-    </section>
+  <!-- UI บน -->
+  <div id="top-right-ui">
+    <div id="timer-container"><i class="fas fa-hourglass-half"></i><span id="timer-display"></span></div>
+    <div id="volume-controls">
+    <button id="volume-button"><i class="fas fa-volume-up"></i></button>
+    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="0.3">
+  </div>
+    <button id="back-to-menu-button">❮ กลับหน้าหลัก</button>
+            <div id="team-bar">คุณ: <span id="me-name">-</span> • เพื่อน: <span id="partner-name">รอจับคู่...</span></div>
   </div>
 
+</div>
+
+  <div id="game-container">
+    <div id="monster-area">
+      <div id="monster-info" class="hidden">
+        <div id="buff-display" class="hidden"></div>
+        <h2 id="monster-name">Monster Name</h2>
+        <div id="health-bar-container"><div id="health-bar"></div></div>
+        <div id="gameover-screen" class="hidden">
+  <h2 id="gameover-title">Game Over</h2>
+  <p id="gameover-desc"></p>
+  <button id="restart-button">เล่นใหม่</button>
+  <button id="back-button">กลับหน้าหลัก</button>
+</div>
+      </div>
+
+      <div id="battle-scene" class="hidden">
+        <div id="player1">
+  <div class="player-name-tag" id="p1-name"></div>
+  <div id="p1-hearts" class="hearts-row"></div>
+  <img id="p1-img" src="assets/images/Ninja_idle.gif" alt="P1"/>
+</div>
+<div id="player2">
+  <div class="player-name-tag" id="p2-name"></div>
+  <div id="p2-hearts" class="hearts-row"></div>
+  <img id="p2-img" src="assets/images/Ninja_idle.gif" alt="P2"/>
+</div>
+
+        <div id="monster-opponent">
+          <img id="monster-img" src="assets/images/monster-idle.gif" alt="Monster"/>
+        </div>
+      </div>
+
+      <!-- ชื่อ + ความยาก + จับคู่ -->
+      <div id="lobby-screen">
+        <h2 style="margin-top:60px">Co-op Mode (ออนไลน์)</h2>
+        <div style="margin:16px 0">
+          <input id="player-name-input" placeholder="พิมพ์ชื่อของคุณ..." maxlength="20"
+                 style="padding:10px 14px;border-radius:8px;border:2px solid #fca311;background:rgba(0,0,0,.35);color:#fff;text-align:center"/>
+        </div>
+        <div style="margin:10px 0">
+          <button class="diff-btn" data-mode="easy" style="padding:10px 16px;margin-right:8px">ง่าย</button>
+          <button class="diff-btn" data-mode="hard" style="padding:10px 16px">ยาก</button>
+        </div>
+        <div style="margin:16px 0">
+          <button id="match-button" style="padding:12px 22px;font-weight:700">🔎 จับคู่</button>
+        </div>
+        <div id="match-status" style="opacity:.9"></div>
+      </div>
+    </div>
+
+    <div id="word-to-type" class="hidden"></div>
+    <input id="player-input" class="hidden" placeholder="พิมพ์คาถาที่นี่..." autocomplete="off" disabled/>
+  </div>
+
+  <!-- เสียง -->
+  <audio id="typing-sound" src="assets/download.mp3" preload="auto"></audio>
+  <audio id="correct-word-sound" src="assets/download_2.mp3" preload="auto"></audio>
+  <audio id="background-music" src="./assets/bg_music.mp3" loop preload="auto"></audio>
+
+  <!-- Firebase ใช้เฉพาะบันทึก leaderboard_coop -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-firestore-compat.js"></script>
   <script>
-    // ==================== Firebase ====================
     const firebaseConfig = {
-      apiKey: "AIzaSyBUBIEQLU2OHw_1ataX1di6V86s0qPsr_E",
-      authDomain: "typomancer-game.firebaseapp.com",
-      projectId: "typomancer-game",
-      storageBucket: "typomancer-game.appspot.com",
-      messagingSenderId: "988104502180",
-      appId: "1:988104502180:web:62dd3b80869a131b39ef31"
+      apiKey:"AIzaSyBUBIEQLU2OHw_1ataX1di6V86s0qPsr_E",
+      authDomain:"typomancer-game.firebaseapp.com",
+      projectId:"typomancer-game",
+      storageBucket:"typomancer-game.appspot.com",
+      messagingSenderId:"988104502180",
+      appId:"1:988104502180:web:62dd3b80869a131b39ef31"
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
+    async function displayCoopLeaderboard() {
+  const tbody = document.getElementById("coop-table-body");
+  const leaderboardDiv = document.getElementById("leaderboard-coop");
+  tbody.innerHTML = "<tr><td colspan='3'>กำลังโหลด...</td></tr>";
 
-    // ==================== Socket.io ====================
-    // เชื่อมกับเซิร์ฟเวอร์เดียวกัน (Same-origin)
-    const socket = io();
+  try {
+    const snap = await db.collection("leaderboard_coop")
+      .orderBy("bossesDefeated", "desc")
+      .orderBy("time", "asc")
+      .limit(10)
+      .get();
 
-    // ==================== State ====================
-    const setupEl = document.getElementById("setup");
-    const lobbyEl = document.getElementById("lobby");
-    const lobbyInfo = document.getElementById("lobbyInfo");
-    const gameEl  = document.getElementById("game");
-    const inputMe = document.getElementById("inputMe");
-    const fireMe  = document.getElementById("fireMe");
-    const wordBox = document.getElementById("wordBox");
-    const statusBox = document.getElementById("statusBox");
-    const hpInner = document.getElementById("hpInner");
-    const bossNameEl = document.getElementById("bossName");
-    const buffMeTag = document.getElementById("buffMe");
-    const buffMateTag = document.getElementById("buffMate");
+    if (snap.empty) {
+      tbody.innerHTML = "<tr><td colspan='3'>ไม่มีข้อมูล</td></tr>";
+      leaderboardDiv.style.display = "block";
+      return;
+    }
 
-    let roomId = null;
-    let myName = "";
-    let mateName = "";
-    let difficulty = "easy";
+    tbody.innerHTML = "";
+    let rank = 1;
+    snap.forEach(doc => {
+      const data = doc.data();
+      const row = `
+        <tr>
+          <td>${rank++}</td>
+          <td>${data.team || data.name || "ไม่ทราบชื่อทีม"}</td>
+          <td>${data.time ? data.time.toFixed(2) + " วิ" : "-"}</td>
+        </tr>`;
+      tbody.innerHTML += row;
+    });
+    leaderboardDiv.style.display = "block";
+  } catch (err) {
+    console.error("Co-op leaderboard error:", err);
+    tbody.innerHTML = "<tr><td colspan='3'>เกิดข้อผิดพลาด</td></tr>";
+    leaderboardDiv.style.display = "block";
+  
+}
 
-    // คำศัพท์ตัวอย่าง (ควรแทนที่ด้วยของจริงถ้ามี)
-    const WORDS = ["shadow","strike","ninja","katana","spirit","arcane","ember","void","storm","phantom","dragon","crimson","azure","onyx","quake","thunder"];
-    function randWord(){ return WORDS[Math.floor(Math.random()*WORDS.length)]; }
+}
 
-    // บอส 2 ตัว
-    const BOSS_LIST = [
-      { name: "Orc Warlord", maxHp: 1200, baseDmg: 50 },
-      { name: "Demon Overlord", maxHp: 1600, baseDmg: 50 }
+  </script>
+
+
+  <!-- Socket.IO -->
+  <script src="/socket.io/socket.io.js"></script>
+
+  <!-- ลอจิกเกม (ยกจาก solo + ใส่เลเยอร์ co-op) -->
+  <script>
+    if (!window.io) {
+  console.error("❌ Socket.IO library not loaded properly!");
+}
+
+
+    // เสียง
+const typingSound = document.getElementById('typing-sound');
+const correctWordSound = document.getElementById('correct-word-sound');
+const attackSound = document.getElementById('attack-sound');
+const backgroundMusic = document.getElementById('background-music');
+
+
+// ปุ่ม/สไลเดอร์เสียง
+const volumeButton = document.getElementById('volume-button');
+const volumeSlider = document.getElementById('volume-slider');
+
+// ตั้งค่าเริ่มต้นเมื่อเข้าฉากต่อสู้
+function initAudioOnStart() {
+  const v = Number(volumeSlider?.value ?? 0.3);
+  [typingSound, correctWordSound, attackSound].forEach(a => {
+    if (!a) return;
+    a.volume = v;
+    a.muted = v === 0;
+  });
+  if (volumeButton) {
+    volumeButton.innerHTML = (v === 0) ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+  }
+}
+volumeButton?.addEventListener('click', () => {
+  const willMute = !(typingSound?.muted);
+  [typingSound, correctWordSound, attackSound,backgroundMusic].forEach(a => { if(a){ a.muted = willMute; }});
+  if (volumeButton) volumeButton.innerHTML = willMute ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+});
+volumeSlider?.addEventListener('input', (e) => {
+  const v = Number(e.target.value);
+  [typingSound, correctWordSound, attackSound,backgroundMusic].forEach(a => { if(a){ a.volume = v; a.muted = v === 0; }});
+  if (volumeButton) volumeButton.innerHTML = (v === 0) ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+});
+
+    // ====== ข้อมูลมอนสเตอร์ (ยกจาก solo) ======
+    const monsterDatabase = [
+      { name: "Cyber Golem",
+        idleImageUrl:"assets/images/monster-idle.gif",
+        hitImageUrl:"assets/images/monster-hit.gif",
+        attackImageUrl:"assets/images/monster-attack.gif",
+        words:["sudo", "ipconfig", "ls -al", "whoami","ip a","mk dir","nslookup","passwdps aux", "bash", "clear", "sort","killall","uptime","dmesg","free -h",
+                      "barcelona", "free kick", "corner kick", "hat-trick","dir", "touch", "du -sh","ls -l","cd","database", "javascript", "powershell"],
+        baseHealth: 10
+      },
+      { name: "Demon",
+        idleImageUrl:"assets/images/Demon_idle.gif",
+        hitImageUrl:"assets/images/Demon_takehit.gif",
+        attackImageUrl:"assets/images/Demon_attack.gif",
+        words: ["hellfire", "abyss", "brimstone", "inferno", "shadow", "torment", "chaos", "curseuname -a", "echo","netstat -an","nano",
+                  "ping 192.168.","authentication", "encryption", "firewall", "virtualization", "repository", "framework", "protocol", "algorithm",
+                  "kernel panic", "buffer overflow", "denial of service", "SYN flood","penalty shootout", "offsides trap", "champions league", "world cup final",
+                  "manchester united", "liverpool fc", "real madrid","goal keeper", "center back", "attacking midfielder"
+                  ],
+        baseHealth: 20
+      }
     ];
-    let bossIndex = 0;
-    let bossHp = BOSS_LIST[0].maxHp;
 
-    // Buff (แยกกันสองฝั่ง)
-    let myBuff = { active:false, until:0, mult:2 };
-    let mateBuff = { active:false, until:0, mult:2 };
+    // ====== ตัวแปรหลัก ======
+    const lobbyScreen = document.getElementById('lobby-screen');
+    const matchBtn = document.getElementById('match-button');
+    const matchStatus = document.getElementById('match-status');
+    const nameInput = document.getElementById('player-name-input');
+    const meNameEl = document.getElementById('me-name');
+    const partnerNameEl = document.getElementById('partner-name');
 
-    // เวลา / ชนะ
-    let startTime = 0;
-    let bossesDefeated = 0;
-    let finished = false;
+    const battleScene = document.getElementById('battle-scene');
+    const monsterInfo = document.getElementById('monster-info');
+    const monsterName = document.getElementById('monster-name');
+    const monsterImg = document.getElementById('monster-img');
+    const healthBar = document.getElementById('health-bar');
+    const wordToType = document.getElementById('word-to-type');
+    const playerInput = document.getElementById('player-input');
+    const p1Img = document.getElementById('p1-img');
+    const p2Img = document.getElementById('p2-img');
+    const p1Hearts = document.getElementById('p1-hearts');
+    const p2Hearts = document.getElementById('p2-hearts');
+    const backBtn = document.getElementById('back-to-menu-button');
+    const timerDisplay = document.getElementById('timer-display');
+    const buffDisplay = document.getElementById('buff-display');
 
-    function setHpBar() {
-      const pct = Math.max(0, Math.round((bossHp / BOSS_LIST[bossIndex].maxHp) * 100));
-      hpInner.style.width = pct + "%";
-    }
+    const playerIdleGif = "assets/images/Ninja_idle.gif";
+    const playerAttackGif = "assets/images/Ninja_atk.gif";
+    const playerHitGif = "assets/images/Ninja_takehit.gif";
 
-    function newWord() {
-      wordBox.textContent = randWord();
-      inputMe.value = "";
-      inputMe.focus();
-    }
+    // สถานะเกม
+    let socket, roomId=null, partnerName='-', selectedMode='easy'; 
+    let myPlayerId = null; 
+    let partnerPlayerId = null;
+    let currentMonsterObject=null, currentMonsterMaxHealth=0, currentMonsterHealth=0;
+    let gameLevel=0, isPlaying=false, isAttacking=false, currentWord='', timer, timeLeft=120;
+    
+    let p1Health, p2Health, p1Max=3, p2Max=3;
+    let startTime, finishTime;
+    let isDamageBuffActive=false, buffTimeout;
+    let isMatching = false;
 
-    function startFight() {
-      const b = BOSS_LIST[bossIndex];
-      bossHp = b.maxHp;
-      bossNameEl.textContent = `${b.name} (${bossIndex+1}/2)`;
-      statusBox.textContent = "พิมพ์คำให้ถูกเพื่อโจมตีบอส!";
-      setHpBar();
-      newWord();
-      if (bossIndex === 0) startTime = Date.now();
-    }
-
-    function tryBuffActivate() {
-      // โอกาส 18% ต่อคำ
-      if (!myBuff.active && Math.random() < 0.18) {
-        myBuff.active = true;
-        myBuff.until = Date.now() + 8000;
-        buffMeTag.classList.remove("hidden");
-        // แจ้งอีกฝั่งให้โชว์สถานะของเรา
-        socket.emit("syncBuff", { roomId, who:"me", active:true, until:myBuff.until });
-        // ตั้ง timeout ปิดบัฟ
-        setTimeout(()=>{
-          myBuff.active = false;
-          buffMeTag.classList.add("hidden");
-          socket.emit("syncBuff", { roomId, who:"me", active:false, until:0 });
-        }, 8000);
-      }
-    }
-
-    function onCorrectWord() {
-      const base = (difficulty === "hard") ? 140 : 90;
-      const dmg = myBuff.active ? base * myBuff.mult : base;
-      socket.emit("attackBoss", { roomId, damage: dmg });
-      tryBuffActivate();
-      newWord();
-    }
-
-    // คลิก/กด Enter เพื่อยิง
-    fireMe.addEventListener("click", ()=>{
-      if (inputMe.value.trim().toLowerCase() === wordBox.textContent) onCorrectWord();
-      else statusBox.textContent = "สะกดผิด ลองใหม่!";
-    });
-    inputMe.addEventListener("keydown", (e)=>{
-      if (e.key === "Enter") {
-        if (inputMe.value.trim().toLowerCase() === wordBox.textContent) onCorrectWord();
-        else statusBox.textContent = "สะกดผิด ลองใหม่!";
-      }
+    // ====== UI เลือกความยาก ======
+    document.querySelectorAll('.diff-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        selectedMode = btn.dataset.mode === 'hard' ? 'hard' : 'easy';
+        document.querySelectorAll('.diff-btn').forEach(b=>b.style.outline='none');
+        btn.style.outline='3px solid #fca311';
+      });
     });
 
-    // ==================== Matchmaking Flow ====================
-    document.getElementById("findBtn").addEventListener("click", () => {
-      myName = document.getElementById("playerName").value.trim();
-      difficulty = document.getElementById("difficulty").value;
-      if (!myName) { alert("กรุณากรอกชื่อก่อน"); return; }
+    // ====== จับคู่ ======
+    matchBtn.addEventListener('click', ()=>{
 
-      // ขอจับคู่
-      socket.emit("findMatch", { playerName: myName, difficulty });
-      setupEl.classList.add("hidden");
-      lobbyEl.classList.remove("hidden");
-      lobbyInfo.textContent = `ชื่อของคุณ: ${myName} • ความยาก: ${difficulty === "hard" ? "ยาก" : "ง่าย"}`;
+      if (isMatching) return; // ⛔ ป้องกันกดซ้ำ
+      isMatching = true;
+
+      matchBtn.addEventListener('click', ()=>{
+  if (isMatching) return;
+  isMatching = true;
+
+  // ✅ เล่นเพลงพื้นหลัง
+  try {
+    const bg = document.getElementById('background-music');
+    if (bg) {
+      bg.volume = Number(document.getElementById('volume-slider').value || 0.3);
+      bg.play().catch(err => console.warn('autoplay blocked:', err));
+    }
+  } catch(e) { console.warn(e); }
+
+  // ✅ ตรวจชื่อก่อนเริ่มจับคู่
+  const name = nameInput.value.trim();
+  if(!name){
+    alert('กรุณาใส่ชื่อก่อน');
+    isMatching = false;
+    return;
+  }
+
+  meNameEl.textContent = name;
+  if(!socket){ socket = io(); bindSocketEvents(); }
+  matchStatus.textContent = 'กำลังจับคู่...';
+  socket.emit('findMatch', { playerName:name, difficulty:selectedMode });
+});
+
+    
+      const name = nameInput.value.trim();
+      if(!name){ alert('กรุณาใส่ชื่อก่อน');
+      isMatching = false;
+      return; }
+      
+      
+      meNameEl.textContent = name;
+
+      if(!socket){ socket = io(); bindSocketEvents(); }
+      matchStatus.textContent = 'กำลังจับคู่...';
+      socket.emit('findMatch', { playerName:name, difficulty:selectedMode });
     });
 
-    socket.on("waiting", (msg)=>{
-      lobbyInfo.textContent = msg || "กำลังรอผู้เล่นอีกคน…";
-    });
+    function bindSocketEvents(){
+      socket.on('waiting', msg=>{
+        matchStatus.textContent = msg;
+      });
 
-    socket.on("matchFound", (payload)=>{
-      // payload: { roomId, partner }
-      roomId = payload.roomId;
-      mateName = payload.partner || "Teammate";
-      lobbyEl.classList.add("hidden");
-      gameEl.classList.remove("hidden");
-      statusBox.textContent = `ต่อสู้ร่วมกับ ${mateName}!`;
-      bossIndex = 0;
-      startFight();
-    });
+      // โค้ดใหม่
+socket.on("syncPlayerHealth", ({ damagedPlayerId, player }) => {
+  // ข้ามถ้า event มาจากตัวเราเอง
+  if (damagedPlayerId === myPlayerId) return;
 
-    // ==================== Real-time Combat Sync ====================
-    socket.on("bossAttacked", (dmg)=>{
-      // อีกฝั่งหรือเราทำดาเมจ → หัก HP ร่วมกัน
-      bossHp -= dmg;
-      setHpBar();
+  let target = player;
+  const iAmRight = (myPlayerId === window.player2Id);
+  if (iAmRight) target = (player === "p1") ? "p2" : "p1";
 
-      if (bossHp <= 0 && !finished) {
-        bossesDefeated++;
-        if (bossIndex === 0) {
-          // ไปตัวที่ 2
-          bossIndex = 1;
-          setTimeout(startFight, 400);
-        } else {
-          // เคลียร์เกม
-          finished = true;
-          const totalTimeSec = (Date.now() - startTime) / 1000;
-          statusBox.textContent = `กำจัดบอสครบ! เวลา ${totalTimeSec.toFixed(2)} วิ`;
-          saveCoopScore(totalTimeSec);
+  if (target === "p1") p1Health = Math.max(0, p1Health - 1);
+  else if (target === "p2") p2Health = Math.max(0, p2Health - 1);
+
+  updateHearts();
+});
+
+socket.on("playHitAnimation", ({ damagedPlayerId }) => {
+  const isMySide = (damagedPlayerId === myPlayerId);
+  const targetImg = isMySide ? p1Img : p2Img;
+  targetImg.src = playerHitGif + '?v=' + Date.now();
+  setTimeout(() => {
+    targetImg.src = playerIdleGif + '?v=' + Date.now();
+  }, 600);
+});
+
+socket.on("teamDefeated", () => {
+  if (!isPlaying) return;
+  gameOver(false);
+});
+
+
+
+
+
+      socket.on('matchFound', payload=>{
+        roomId = payload.roomId;
+        partnerName = payload.partner;
+        myPlayerId = payload.yourId;
+        partnerPlayerId = payload.partnerId;
+        partnerNameEl.textContent = partnerName;
+        isLeftPlayer = payload.isLeft; // true ถ้าเป็นฝั่งซ้าย
+        player1Id = payload.isLeft ? myPlayerId : partnerPlayerId;
+        player2Id = payload.isLeft ? partnerPlayerId : myPlayerId;
+        window.player1Id = payload.isLeft ? myPlayerId : partnerPlayerId;
+        window.player2Id = payload.isLeft ? partnerPlayerId : myPlayerId;
+
+        startCoopGame(payload.isLeft); // เริ่มพร้อมกัน
+      });
+
+      socket.on('bossAttacked', (damage)=>{
+        // ลดเลือดบอสจาก "ทั้งสองฝั่ง" ที่ได้รับแพ็คเก็ตนี้
+        currentMonsterHealth = Math.max(0, currentMonsterHealth - damage);
+        updateHealthBar();
+        monsterImg.src = currentMonsterObject.hitImageUrl;
+        setTimeout(()=>{ monsterImg.src = currentMonsterObject.idleImageUrl; }, 300);
+
+        if(currentMonsterHealth<=0){
+          handleMonsterDefeat();
+        }else{
+          nextWord();
         }
-      }
-    });
+      });
 
-    socket.on("buffSync", ({ who, active })=>{
-      // โชว์สถานะบัฟของอีกฝั่งเท่านั้น
-      if (who === "me") return; // ข้อมูลของเราเองไม่ต้องทับ
-      if (active) buffMateTag.classList.remove("hidden");
-      else buffMateTag.classList.add("hidden");
-    });
+      socket.on("playerAttack", ({ attackerId }) => {
+  if (attackerId === myPlayerId) return;
+  p2Img.src = playerAttackGif + '?v=' + Date.now();
+  setTimeout(() => {
+    p2Img.src = playerIdleGif + '?v=' + Date.now();
+  }, 1000);
+});
 
-    // ==================== Save to Firestore (Co-op board) ====================
-    async function saveCoopScore(totalSec) {
-      try {
-        const pairName = `${myName} & ${mateName} (Co-op)`;
-        await db.collection("leaderboard").add({
-          name: pairName,
-          time: totalSec,
-          bossesDefeated: 2,
-          mode: (difficulty === "hard") ? "ยาก" : "ง่าย",
-          gameType: "coop",
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        statusBox.textContent += " • บันทึกคะแนนสำเร็จ!";
-      } catch (e) {
-        console.error("saveCoopScore error", e);
-        statusBox.textContent += " • บันทึกคะแนนล้มเหลว";
+
+
+      socket.on('buffSync', payload=>{
+        // { roomId, who, active, until }
+        if(payload.active){
+          activateDamageBuff(true); // โชว์สถานะโดยไม่ดีเลย์
+        }else{
+          stopDamageBuff(true);
+        }        
+      });
+
+      socket.on('forceEndGame', () => {
+        isMatching = false;
+  if (!isPlaying) return;
+  console.log('💥 ห้องพังจากเซิร์ฟเวอร์');
+  isPlaying = false;
+  clearInterval(timer);
+  playerInput.disabled = true;
+
+  const overScreen = document.getElementById('gameover-screen');
+  const overTitle = document.getElementById('gameover-title');
+  const overDesc = document.getElementById('gameover-desc');
+  overScreen.classList.remove('hidden');
+  overTitle.textContent = '❌ ห้องถูกปิด';
+  overDesc.textContent = 'ผู้เล่นอีกฝ่ายออกจากเกมแล้ว';
+  overTitle.style.color = '#ffae42';
+  document.getElementById('restart-button').style.display = 'none';
+
+  try {
+    if (socket && socket.connected) socket.disconnect();
+  } catch (e) { console.warn(e); }
+
+  setTimeout(() => { window.location.href = "index.html"; }, 5000);
+});
+
+
+      socket.on('partnerDisconnected', () => {
+        if (!isPlaying) return;
+        isPlaying = false;
+        clearInterval(timer);
+        playerInput.disabled = true;
+        socket?.disconnect?.();
+
+        const overScreen = document.getElementById('gameover-screen');
+        const overTitle = document.getElementById('gameover-title');
+        const overDesc = document.getElementById('gameover-desc');
+        
+        overScreen.classList.remove('hidden');
+
+        overTitle.textContent = 'การเชื่อมต่อถูกตัด 😥';
+        overDesc.textContent = 'ผู้เล่นอีกฝ่ายได้ออกจากเกมแล้ว';
+        overTitle.style.color = '#ffae42';
+
+        document.getElementById('restart-button').style.display = 'none';
+
+         try {
+    if (socket && socket.connected) socket.disconnect();
+  } catch (e) {
+    console.warn("Socket disconnect error:", e);
+  }
+  
+  // 🔁 redirect กลับหน้าแรกหลัง 5 วินาที
+  setTimeout(() => {
+    window.location.href = "index.html";
+  }, 5000);
+      });
+    }
+
+    // ====== เริ่มเกมจริงหลังจับคู่สำเร็จ ======
+    function startCoopGame(isLeftSide = true) {
+  const p1 = document.getElementById('player1');
+  const p2 = document.getElementById('player2');
+  p1.style.opacity = '1';
+  p2.style.opacity = '1';
+
+  const clearLR = el => { el.style.left = ''; el.style.right = ''; };
+  clearLR(p1); clearLR(p2);
+
+  if (isLeftSide) {
+    // ฝั่งซ้าย
+    p1.style.left = '-350px';
+    p2.style.left = '-150px';
+  } else {
+    // ฝั่งขวา (mirror แต่ใช้ left เช่นเดิม)
+    p2.style.left = 'calc(100% - 1000px)';
+    p1.style.left = 'calc(100% - 800px)';
+  } // ← ปิด else ตรงนี้เท่านั้น!
+
+  // ตั้งชื่อ (วางไว้นอก if/else ครั้งเดียวพอ)
+  document.getElementById('p1-name').textContent = meNameEl.textContent;
+  document.getElementById('p2-name').textContent = partnerName;
+
+  // ตั้งพลัง/เวลา
+  if (selectedMode === 'hard') { timeLeft = 90; p1Max = p2Max = 1; }
+  else { timeLeft = 120; p1Max = p2Max = 3; }
+  p1Health = p1Max; p2Health = p2Max; updateHearts();
+
+  startTime = Date.now();
+  lobbyScreen.classList.add('hidden');
+  document.body.style.backgroundImage = "url('assets/images/battle.jpg')";
+  battleScene.classList.remove('hidden');
+  monsterInfo.classList.remove('hidden');
+  initAudioOnStart();
+
+  gameLevel = 0;
+  currentMonsterObject = monsterDatabase[gameLevel];
+  currentMonsterMaxHealth = currentMonsterObject.baseHealth;
+  currentMonsterHealth = currentMonsterMaxHealth;
+  monsterName.textContent = currentMonsterObject.name;
+  updateHealthBar();
+
+  isPlaying = true;
+  clearInterval(timer);
+  timer = setInterval(updateTimer, 1000);
+  timerDisplay.textContent = timeLeft;
+
+  playerInput.disabled = false;
+  playerInput.classList.remove('hidden');
+  nextWord();
+  playerInput.focus();
+}
+
+
+
+    function updateHearts(){
+      const draw = (wrap, hp, max)=>{
+        wrap.innerHTML='';
+        for(let i=0;i<max;i++){
+          const k=document.createElement('i');
+          k.classList.add('fas','fa-heart');
+          if(i>=hp) k.classList.add('empty');
+          wrap.appendChild(k);
+        }
+      };
+      draw(p1Hearts, p1Health, p1Max);
+      draw(p2Hearts, p2Health, p2Max);
+    }
+
+    function updateHealthBar(){
+      const pct = (currentMonsterHealth / currentMonsterMaxHealth) * 100;
+      healthBar.style.width = pct + '%';
+    }
+
+    function nextWord(){
+      const arr = currentMonsterObject.words;
+      currentWord = arr[Math.floor(Math.random() * arr.length)];
+      wordToType.classList.remove('hidden');
+      wordToType.innerHTML = `<span>${currentWord}</span>`;
+      playerInput.value='';
+      playerInput.disabled=false;
+      isAttacking=false;
+      setTimeout(() => playerInput.focus(), 0);
+    }
+
+    // ====== พิมพ์คำ/โจมตี ======
+    // ====== พิมพ์คำ/โจมตี (เหมือน solo แต่ส่งผลโจมตีให้เซิร์ฟเวอร์กระจาย) ======
+playerInput.addEventListener('keydown', (ev) => {
+  if (ev.key !== 'Enter' || !isPlaying || isAttacking) return;
+  ev.preventDefault();
+  const typed = playerInput.value.trim();
+  if (!typed) return;
+
+  // ถูกคำ → โจมตี
+  if (typed === currentWord) {
+    isAttacking = true;
+    playerInput.disabled = true;
+
+    // เอฟเฟกต์โจมตีเรา (เหมือน solo)
+  p1Img.src = playerAttackGif + '?v=' + Date.now(); // รีเซ็ต cache
+setTimeout(() => {
+  p1Img.src = playerIdleGif + '?v=' + Date.now(); // กลับไปท่า idle แน่นอน
+}, 1000); // เพิ่มเวลานิดหน่อยให้ animation เล่นครบ
+
+
+    // ดาเมจ (มีบัฟ = 3, ปกติ = 1)
+    let damage = isDamageBuffActive ? 3 : 1;
+
+    // สุ่มบัฟแบบเดียวกับ solo
+    if (Math.random() < 0.3) activateDamageBuff(); // จะ sync ให้ห้องด้วย
+
+    // ❗ ส่งผลโจมตีให้เซิร์ฟเวอร์
+    
+    socket.emit('attackBoss', { roomId, damage });
+    attackSound && (attackSound.currentTime = 0, attackSound.play());
+  } else {
+    // ผิดคำ → ศัตรูตีเรา (โค้ดสไตล์เดียวกับ solo)
+    isAttacking = true;
+    playerInput.disabled = true;
+
+    monsterImg.src = currentMonsterObject.attackImageUrl;
+    setTimeout(() => {
+      // เล่นท่าถูกตี + ลดหัวใจเรา
+      const hitSrc = playerHitGif + '?cb=' + Date.now();
+      p1Img.src = hitSrc;
+      correctWordSound && (correctWordSound.currentTime = 0, correctWordSound.play()); // ใช้เสียงเดิมแทนเสียงตีเรา
+
+    p1Health = Math.max(0, p1Health - 1);
+updateHearts();
+
+// 🔻 เดิม
+// socket.emit("playerDamaged", { roomId, player: "p1" });
+// socket.emit("playerHitAnimation", { roomId, player: "p1" });
+
+// ✅ ใหม่
+const mySide = (myPlayerId === window.player1Id) ? "p1" : "p2";
+socket.emit("playerDamaged", { roomId, player: mySide });
+socket.emit("playerHitAnimation", { roomId, player: mySide });
+
+
+
+      if (p1Health <= 0) {
+  gameOver(false);
+  socket.emit("teamDefeated", { roomId });
+  return;
+}
+
+      setTimeout(() => {
+        p1Img.src = playerIdleGif + '?cb=' + Date.now();
+        monsterImg.src = currentMonsterObject.idleImageUrl;
+        playerInput.disabled = false;
+       setTimeout(() => playerInput.focus(), 0);
+        isAttacking = false;
+        nextWord();
+      }, 300);
+    }, 400);
+  }
+});
+
+
+
+
+
+    function updateTimer() {
+  if (!isPlaying) return;
+  timeLeft--;
+  timerDisplay.textContent = timeLeft;
+
+  // หมดเวลา → แพ้ร่วม
+  if (timeLeft <= 0) {
+    gameOver(false);
+  }
+}
+
+
+    // ====== บัฟโจมตี ======
+    function activateDamageBuff(fromSync = false) {
+  isDamageBuffActive = true;
+  buffDisplay.textContent = 'พลังโจมตีเพิ่ม!';
+  buffDisplay.classList.remove('hidden');
+  buffDisplay.classList.add('damage-buff');
+
+  clearTimeout(buffTimeout);
+  buffTimeout = setTimeout(() => stopDamageBuff(), 10000);
+
+  // กระจายให้ห้องเมื่อเป็นการติดบัฟฝั่งเรา
+  if (!fromSync && socket && socket.connected) {
+  socket.emit('syncBuff', { roomId, who: meNameEl.textContent, active: true, until: Date.now() + 10000 });
+}};
+
+
+    function stopDamageBuff(fromSync=false){
+      isDamageBuffActive = false;
+      buffDisplay.classList.remove('damage-buff');
+      buffDisplay.style.opacity = '0';
+      setTimeout(()=>{
+        buffDisplay.classList.add('hidden');
+        buffDisplay.style.opacity = '';
+      }, 600);
+      if(!fromSync){
+        socket.emit('syncBuff', { roomId, who: meNameEl.textContent, active:false });
       }
     }
 
-    // ==================== Helper socket relays ====================
-    // แจ้งอีกฝั่งเรื่องบัฟของเรา
-    socket.on("connect", ()=>{
-      // connected
-    });
+    // ====== ชนะ/แพ้ และบันทึกสกอร์ Co-op ======
+    async function handleMonsterDefeat() {
+  gameLevel++;
+  if (gameLevel >= monsterDatabase.length) {
+    finishTime = (Date.now() - startTime) / 1000;
+    return gameOver(true); // ← พอ
+  }
+  // ไปด่านถัดไป…
 
-    // เมื่อเราเปิด/ปิดบัฟ → แจ้งผ่าน emit แล้ว server ต้อง broadcast เป็น 'buffSync'
-    // (ใน Server.js ให้รองรับ event 'syncBuff' → io.to(roomId).emit('buffSync', payload))
+
+
+  // 🔁 ไปบอสตัวถัดไป
+  currentMonsterObject = monsterDatabase[gameLevel];
+  currentMonsterMaxHealth = currentMonsterObject.baseHealth;
+  currentMonsterHealth = currentMonsterMaxHealth;
+  monsterName.textContent = currentMonsterObject.name;
+  updateHealthBar();
+  nextWord();
+
+
+}
+
+
+
+
+async function saveCoopResult(timeUsed, isWin) {
+  try {
+    const record = {
+      team: `${meNameEl.textContent} & ${partnerName}`,
+      difficulty: (selectedMode === 'easy') ? 'ง่าย' : 'ยาก',
+      time: timeUsed,
+      bossesDefeated: gameLevel,
+      result: isWin ? 'ชนะ' : 'แพ้',
+      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+    };
+    await db.collection('leaderboard_coop').add(record);
+    console.log('✅ บันทึกผล coop สำเร็จ:', record);
+  } catch (e) {
+    console.error('❌ บันทึกคะแนน coop ล้มเหลว:', e);
+  }
+
+
+}
+
+
+
+  async function gameOver(win) {
+  isPlaying = false;
+  clearInterval(timer);
+  playerInput.disabled = true;
+
+  finishTime = (Date.now() - startTime) / 1000;
+  await saveCoopResult(finishTime, win);  // ← บันทึกจุดเดียว
+
+  // แสดงกล่อง Game Over …
+
+  // แสดงจอ Game Over
+  const overScreen = document.getElementById('gameover-screen');
+  const overTitle = document.getElementById('gameover-title');
+  const overDesc = document.getElementById('gameover-desc');
+  overScreen.classList.remove('hidden');
+
+  if (win) {
+    overTitle.textContent = '🎉 ชนะร่วมกัน!';
+    overDesc.textContent = `ใช้เวลา ${finishTime.toFixed(2)} วินาที`;
+    overTitle.style.color = '#00ff88';
+  } else {
+    overTitle.textContent = '💀 คุณแพ้ร่วมกัน';
+    overDesc.textContent = 'ลองใหม่อีกครั้งสิ!';
+    overTitle.style.color = '#ff5555';
+  }
+
+  // ปุ่มกด
+  document.getElementById('restart-button').onclick = () => {
+    location.reload();
+  };
+  document.getElementById('back-button').onclick = () => {
+    window.location.href = '/index.html';
+  };
+}
+// ====== ปุ่มกลับหน้าหลัก ======
+// ====== ปุ่มกลับหน้าหลัก ======
+const backToMenuBtn = document.getElementById('back-to-menu-button');
+if (backToMenuBtn) {
+  backToMenuBtn.addEventListener('click', () => {
+  if (isPlaying && myPlayerId && partnerPlayerId) {
+    socket.emit('leaveGame', {
+      playerId: myPlayerId,
+      partnerId: partnerPlayerId
+    });
+  }
+  setTimeout(() => {
+    if (socket && socket.connected) socket.disconnect();
+    window.location.href = "index.html";
+  }, 1000); // เดิม 300 → เพิ่มเป็น 800ms เพื่อให้ server broadcast ทัน
+});
+
+
+}
+window.addEventListener("beforeunload", () => {
+  try {
+    if (socket && socket.connected && myPlayerId && partnerPlayerId) {
+      socket.emit("leaveGame", {
+        playerId: myPlayerId,
+        partnerId: partnerPlayerId
+      });
+    }
+  } catch (e) {
+    console.warn("beforeunload error", e);
+  }
+});
+window.addEventListener("DOMContentLoaded", displayCoopLeaderboard);
 
   </script>
 </body>
 </html>
+  
