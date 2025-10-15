@@ -11,172 +11,197 @@ const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-// เสิร์ฟไฟล์ทั้งหมด (รวมถึง coop.html, solo.html, index.html)
-// ======== ✅ เสิร์ฟไฟล์ทั้งหมด (รวมถึง coop, solo, index) ========
+// ======== ✅ เสิร์ฟไฟล์ทั้งหมด ========
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ route สำหรับหน้า index/solo/coop
+// ✅ Routes
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
 app.get('/solo.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'solo.html'));
 });
+
 app.get('/coop.html', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'coop.html'));
 });
-
-
-
-
-
-
-
 
 // =============================
 // 🎮 ระบบจับคู่ผู้เล่น Co-op
 // =============================
 const waiting = { easy: null, hard: null };
 const activePlayers = {};
+const roomReady = {};
 
 io.on("connection", (socket) => {
   console.log("🟢 Client connected:", socket.id);
-  // --- ✅ จับคู่ผู้เล่น ---
+
+  // ===== 🔍 จับคู่ผู้เล่น =====
   socket.on("findMatch", ({ playerName, difficulty }) => {
     const lane = difficulty === "hard" ? "hard" : "easy";
 
-     if (waiting[lane]?.id === socket.id) {
-    socket.emit("waiting", "คุณกำลังรอผู้เล่นอีกคนอยู่...");
-    return;
-  }
+    // ป้องกันการจับคู่ตัวเองซ้ำ
+    if (waiting[lane]?.id === socket.id) {
+      socket.emit("waiting", "คุณกำลังรอผู้เล่นอีกคนอยู่...");
+      return;
+    }
 
     if (!waiting[lane]) {
-      // ถ้ายังไม่มีใครรอ → เก็บไว้
+      // ยังไม่มีใครรอ → เก็บไว้ในคิว
       waiting[lane] = { id: socket.id, name: playerName };
       socket.emit("waiting", "กำลังรอผู้เล่นอีกคน...");
       console.log(`⏳ ${playerName} รอในแถว ${lane}`);
     } else {
-      // มีคนรอ → จับคู่สำเร็จ
+      // มีคนรออยู่ → จับคู่สำเร็จ
       const roomId = `room_${lane}_${Date.now()}`;
       const mate = waiting[lane];
       waiting[lane] = null;
 
+      // เข้าร่วมห้อง
       socket.join(roomId);
-      io.sockets.sockets.get(mate.id)?.join(roomId);
+      const mateSocket = io.sockets.sockets.get(mate.id);
+      if (mateSocket) mateSocket.join(roomId);
 
-      activePlayers[socket.id] = { roomId, partnerId: mate.id };
-      activePlayers[mate.id] = { roomId, partnerId: socket.id };
+      // บันทึกข้อมูลผู้เล่น
+      activePlayers[socket.id] = { roomId, partnerId: mate.id, name: playerName };
+      activePlayers[mate.id] = { roomId, partnerId: socket.id, name: mate.name };
 
-      // แจ้งทั้งสองฝั่ง
-     io.to(socket.id).emit("matchFound", { 
-  roomId, 
-  partner: mate.name,
-  yourId: socket.id,
-  partnerId: mate.id,
-  isLeft: true      // ฝั่งที่เข้าใหม่อยู่ซ้าย
-});
-io.to(mate.id).emit("matchFound", { 
-  roomId, 
-  partner: playerName,
-  yourId: mate.id,
-  partnerId: socket.id,
-  isLeft: false     // ฝั่งที่รอก่อนอยู่ขวา
-});
+      // แจ้งผลการจับคู่
+      io.to(socket.id).emit("matchFound", {
+        roomId,
+        partner: mate.name,
+        yourId: socket.id,
+        partnerId: mate.id,
+        isLeft: false  // คนที่เข้าใหม่อยู่ขวา
+      });
 
+      io.to(mate.id).emit("matchFound", {
+        roomId,
+        partner: playerName,
+        yourId: mate.id,
+        partnerId: socket.id,
+        isLeft: true   // คนที่รออยู่ก่อนอยู่ซ้าย
+      });
 
-      console.log(`🎮 จับคู่สำเร็จ: ${playerName} ❤️ ${mate.name} [${lane}]`);
+      console.log(`🎮 จับคู่สำเร็จ: ${mate.name} ❤️ ${playerName} [${lane}] → Room: ${roomId}`);
     }
   });
 
-  // --- ✅ ดาเมจจากผู้เล่น ---
+  // ===== ⚔️ โจมตีบอส =====
   socket.on("attackBoss", ({ roomId, damage }) => {
-  // ส่งให้ทุกคนในห้องเห็นทั้งท่าตีและเลือดลดพร้อมกัน
-  io.to(roomId).emit("playerAttack", { attackerId: socket.id });
-  io.to(roomId).emit("bossAttacked", damage);
-});
-// ...
-socket.on("playerDamaged", ({ roomId, player }) => {
-  // player จะเป็น "p1" หรือ "p2"
-  socket.broadcast.to(roomId).emit("syncPlayerHealth", { damagedPlayerId: socket.id, player });
-});
-
-
-socket.on("playerHitAnimation", ({ roomId, player }) => {
-  io.to(roomId).emit("playHitAnimation", { damagedPlayerId: socket.id, player });
-});
-
-io.on("connection", (socket) => {
-  console.log("✅ New player connected:", socket.id);
-
-  // ✅ event syncBuff ต้องอยู่ "ภายใน" connection เท่านั้น
-  socket.on("syncBuff", (payload) => {
-    const { roomId, buffData } = payload;
-    io.to(roomId).emit("syncBuff", buffData);
+    console.log(`⚔️ ${socket.id} attacked boss in ${roomId} with ${damage} damage`);
+    
+    // แจ้งให้ทุกคนในห้องเห็นการโจมตี
+    io.to(roomId).emit("playerAttack", { attackerId: socket.id });
+    io.to(roomId).emit("bossAttacked", damage);
   });
+
+  // ===== 💔 ผู้เล่นโดนโจมตี =====
+  socket.on("playerDamaged", ({ roomId, player }) => {
+    console.log(`💔 Player ${player} damaged in ${roomId}`);
+    socket.broadcast.to(roomId).emit("syncPlayerHealth", {
+      damagedPlayerId: socket.id,
+      player
+    });
+  });
+
+  // ===== 🩸 Animation โดนตี =====
+  socket.on("playerHitAnimation", ({ roomId, player }) => {
+    socket.broadcast.to(roomId).emit("playHitAnimation", {
+      damagedPlayerId: socket.id,
+      player
+    });
+  });
+
+  // ===== 🔥 Sync Buff =====
+  socket.on("syncBuff", (payload) => {
+    const { roomId } = payload;
+    console.log(`🔥 Buff synced in ${roomId}`);
+    socket.broadcast.to(roomId).emit("buffSync", payload);
+  });
+
+  // ===== 💀 ทีมแพ้ =====
+  socket.on("teamDefeated", ({ roomId }) => {
+    console.log(`💀 Team defeated in ${roomId}`);
+    io.to(roomId).emit("teamDefeated");
+  });
+
+  // ===== ✅ ผู้เล่นพร้อม =====
+  socket.on("playerReady", ({ roomId, playerId }) => {
+    if (!roomReady[roomId]) roomReady[roomId] = new Set();
+    roomReady[roomId].add(playerId);
+
+    console.log(`✅ Player ${playerId} ready in ${roomId} (${roomReady[roomId].size}/2)`);
+
+    // ถ้ามีครบสองคน
+    if (roomReady[roomId].size >= 2) {
+      io.to(roomId).emit("startGame", { roomId });
+      delete roomReady[roomId];
+      console.log(`🎮 Game started in ${roomId}`);
+    }
+  });
+
+  // ===== 🚪 ออกจากเกม =====
   socket.on("leaveGame", ({ playerId, partnerId }) => {
-  console.log(`🏃 ผู้เล่น ${playerId} กดออกจากเกม`);
-  io.to(partnerId).emit("forceEndGame"); // บังคับให้คู่หูจบเกมทันที
-  if (activePlayers[playerId]) delete activePlayers[playerId];
-  if (activePlayers[partnerId]) delete activePlayers[partnerId];
-});
+    console.log(`🚪 ${playerId} left the game`);
+    
+    // บังคับให้คู่หูออกจากเกม
+    io.to(partnerId).emit("forceEndGame");
+    
+    // ลบข้อมูลผู้เล่น
+    if (activePlayers[playerId]) {
+      const roomId = activePlayers[playerId].roomId;
+      console.log(`🗑️ Cleaning up room ${roomId}`);
+      delete activePlayers[playerId];
+    }
+    if (activePlayers[partnerId]) {
+      delete activePlayers[partnerId];
+    }
+  });
 
-socket.on("disconnecting", () => {
-  const playerInfo = activePlayers[socket.id];
-  if (playerInfo) {
-    console.log(`⚠️ ${socket.id} กำลังจะหลุดจากห้อง ${playerInfo.roomId}`);
-    io.to(playerInfo.partnerId).emit("forceEndGame");
-  }
-});
-
-socket.on("disconnect", () => {
-  console.log(`❌ ${socket.id} disconnected`);
-  const playerInfo = activePlayers[socket.id];
-  if (playerInfo) {
-    const partnerSocket = io.sockets.sockets.get(playerInfo.partnerId);
-    if (partnerSocket && partnerSocket.connected) {
+  // ===== ⚠️ กำลังจะ Disconnect =====
+  socket.on("disconnecting", () => {
+    const playerInfo = activePlayers[socket.id];
+    if (playerInfo) {
+      console.log(`⚠️ ${socket.id} is disconnecting from room ${playerInfo.roomId}`);
       io.to(playerInfo.partnerId).emit("forceEndGame");
     }
-    delete activePlayers[socket.id];
-    delete activePlayers[playerInfo.partnerId];
-  }
-  if (waiting.easy?.id === socket.id) waiting.easy = null;
-  if (waiting.hard?.id === socket.id) waiting.hard = null;
-});
-// ✅ ตรวจว่าในห้องมี 2 คนพร้อมแล้วค่อยเริ่ม
-const roomReady = {};
-
-socket.on("playerReady", ({ roomId, playerId }) => {
-  if (!roomReady[roomId]) roomReady[roomId] = new Set();
-  roomReady[roomId].add(playerId);
-
-  // ถ้ามีครบสองคน
-  if (roomReady[roomId].size >= 2) {
-    io.to(roomId).emit("startGame", { roomId });
-    delete roomReady[roomId];
-  }
-});
-socket.on("teamDefeated", ({ roomId }) => {
-  // แจ้งทุกคนในห้องว่าแพ้ร่วมกัน
-  io.to(roomId).emit("teamDefeated");
-});
-
-
-  // ... event อื่น ๆ ที่เกี่ยวกับห้องหรือโจมตี ฯลฯ
-});
-
-
-
   });
 
-  // --- ✅ Sync Buff ระหว่างผู้เล่น ---
-  
- 
+  // ===== ❌ Disconnect =====
+  socket.on("disconnect", () => {
+    console.log(`❌ ${socket.id} disconnected`);
+    
+    const playerInfo = activePlayers[socket.id];
+    
+    if (playerInfo) {
+      const partnerSocket = io.sockets.sockets.get(playerInfo.partnerId);
+      if (partnerSocket && partnerSocket.connected) {
+        console.log(`📢 Notifying partner ${playerInfo.partnerId} about disconnect`);
+        io.to(playerInfo.partnerId).emit("forceEndGame");
+      }
+      
+      delete activePlayers[socket.id];
+      delete activePlayers[playerInfo.partnerId];
+    }
+    
+    // ลบจากคิวรอ
+    if (waiting.easy?.id === socket.id) {
+      console.log(`🗑️ Removed ${socket.id} from easy queue`);
+      waiting.easy = null;
+    }
+    if (waiting.hard?.id === socket.id) {
+      console.log(`🗑️ Removed ${socket.id} from hard queue`);
+      waiting.hard = null;
+    }
+  });
+});
 
-
-
-
-// ======== ✅ Port สำหรับ Render / Local ========
+// ======== ✅ Start Server ========
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
+  console.log(`🎮 Game is ready to play!`);
+  console.log(`📂 Make sure your files are in the 'public' folder`);
 });
