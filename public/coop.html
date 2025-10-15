@@ -19,10 +19,12 @@
       display:flex;justify-content:center;align-items:center;height:100vh;margin:0;text-align:center;overflow:hidden;
       background-image:url("assets/images/background.jpg");background-size:cover;background-position:center;position:relative;
     }
-    #game-container{width:900px;height:650px;background: none;border-radius:15px;box-shadow: none rgba(164,134,242,.5);
+    #game-container
+    {width:900px;height:650px;background: none;border-radius:15px;box-shadow: none rgba(164,134,242,.5);
       padding:20px;display:flex;flex-direction:column;justify-content:space-between;position:relative}
     #game-container.battle-mode-bg{background:none;box-shadow:none}
-    #top-right-ui{position:absolute;top:10px;left:20px;display:flex;align-items:center;gap:16px;z-index:100;background-color:rgba(26,26,46,0.3);
+    #top-right-ui
+    {position:absolute;top:10px;left:20px;display:flex;align-items:center;gap:16px;z-index:100;background-color:rgba(26,26,46,0.3);
       padding:10px 15px;border-radius:10px;box-shadow:0 0 15px rgba(0,0,0,.5)}
     #back-to-menu-button{background-color:#fca311;color:#1a1a2e;border:none;border-radius:5px;padding:8px 12px;cursor:pointer}
     #timer-container {
@@ -361,6 +363,7 @@
         </div>
         <div style="margin:10px 0">
           <button class="diff-btn" data-mode="easy" style="padding:10px 16px;margin-right:8px">ง่าย</button>
+          <button class="diff-btn" data-mode="medium" style="padding:10px 16px;margin-right:8px">กลาง</button>
           <button class="diff-btn" data-mode="hard" style="padding:10px 16px">ยาก</button>
         </div>
         <div style="margin:16px 0">
@@ -486,20 +489,32 @@ volumeSlider?.addEventListener('input', (e) => {
         idleImageUrl:"assets/images/monster-idle.gif",
         hitImageUrl:"assets/images/monster-hit.gif",
         attackImageUrl:"assets/images/monster-attack.gif",
-        words:["sudo", "ipconfig", "ls -al", "whoami","ip a","mk dir","nslookup","passwdps aux", "bash", "clear", "sort","killall","uptime","dmesg","free -h",
-                      "barcelona", "free kick", "corner kick", "hat-trick","dir", "touch", "du -sh","ls -l","cd","database", "javascript", "powershell"],
+        words:["sudo", "CMD", "ls -al", "HTML","ip a","mk dir","RUN","NPM", "bash", "Ant", "sort","Body","Cat","dmesg","free -h",
+                      "MANU", "ASDF", "i know", "i once","dir", "touch", "du -sh","ls -l","cd","so did", "our", "will"],
         baseHealth: 10
       },
       { name: "Demon",
         idleImageUrl:"assets/images/Demon_idle.gif",
         hitImageUrl:"assets/images/Demon_takehit.gif",
         attackImageUrl:"assets/images/Demon_attack.gif",
-        words: ["hellfire", "abyss", "brimstone", "inferno", "shadow", "torment", "chaos", "curseuname -a", "echo","netstat -an","nano",
-                  "ping 192.168.","authentication", "encryption", "firewall", "virtualization", "repository", "framework", "protocol", "algorithm",
-                  "kernel panic", "buffer overflow", "denial of service", "SYN flood","penalty shootout", "offsides trap", "champions league", "world cup final",
-                  "manchester united", "liverpool fc", "real madrid","goal keeper", "center back", "attacking midfielder"
+        words: ["hellfire", "account application", "browser computer", " database device", "update upload user", "torment wireless", "security server software", "curseuname -a", "echo Benten","netstat -an","nano",
+                  "ping 192.168.","authentication", "encryption", "download email file", "virtualization", "repository framework", "protocol algorithm",
+                  "keyboard memory", "buffer overflow", "denial of service", "network online password","penalty shootout", "offsides trap", "champions league", "world cup final",
+                  "manchester united", "graphic hardware internet ", "real madrid","goal keeper", "center back", "attacking midfielder"
                   ],
         baseHealth: 20
+      },
+
+      { name: "Cthulu",
+        idleImageUrl:"assets/images/Cthulu_idle.gif",
+        hitImageUrl:"assets/images/Cthulu_hurt.gif",
+        attackImageUrl:"assets/images/Cthulu_atk.gif",
+        words: ["The company decided to upgrade its software to improve overall performance.",  "chaosPlease remember to back up all your important files before the system update.", "I couldn’t access the database since my login credentials had expired.", 
+                  "The email attachment was too large, so I had to compress the file first.", "Everyone in the office relies heavily on cloud storage for collaboration.", "The professor provided a comprehensive explanation that clarified even the most abstract ideas.",
+                  "Despite numerous challenges, the organization continues to pursue its long-term vision.", "Under no circumstances should confidential information be shared with unauthorized personnel.", "Sometimes silence can express more than a thousand carefully chosen words.",
+                  "Manchester united Number 1 of Team Football", "My luggage was delayed at the airport, and I had to wait two days to get it back.", "attacking Traveling alone teaches you independence and helps you discover who you really are.","I always book my flights online because it’s faster and often cheaper."
+                  ],
+        baseHealth: 25
       }
     ];
 
@@ -975,7 +990,11 @@ async function saveCoopResult(timeUsed, isWin) {
   try {
     const record = {
       team: `${meNameEl.textContent} & ${partnerName}`,
-      difficulty: (selectedMode === 'easy') ? 'ง่าย' : 'ยาก',
+      difficulty: (selectedMode === 'easy')
+  ? 'ง่าย'
+  : (selectedMode === 'medium')
+    ? 'กลาง'   : 'ยาก',
+
       time: timeUsed,
       bossesDefeated: gameLevel,
       result: isWin ? 'ชนะ' : 'แพ้',
